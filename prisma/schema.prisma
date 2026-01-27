@@ -1,0 +1,115 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  STUDENT
+  TUTOR
+  ADMIN
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+
+model TutorProfile {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  bio           String?
+  pricePerHour  Int
+  experience    Int
+  rating        Float    @default(0)
+  totalReviews  Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  // user          User      @relation(fields: [userId], references: [id])
+  categories    TutorCategory[]
+  availability  Availability[]
+  bookings      Booking[] @relation("TutorBookings")
+  reviews       Review[]
+
+  @@map("tutor_profiles")
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  tutors TutorCategory[]
+
+  @@map("categories")
+}
+
+model TutorCategory {
+  id          String @id @default(uuid())
+  tutorId     String
+  categoryId  String
+
+  tutor    TutorProfile @relation(fields: [tutorId], references: [id])
+  category Category     @relation(fields: [categoryId], references: [id])
+
+  @@unique([tutorId, categoryId])
+  @@map("tutor_categories")
+}
+
+model Availability {
+  id        String   @id @default(uuid())
+  tutorId   String
+  dayOfWeek Int      
+  startTime String   
+  endTime   String   
+  isBooked  Boolean  @default(false)
+
+  tutor TutorProfile @relation(fields: [tutorId], references: [id])
+
+  @@map("availability")
+}
+
+model Booking {
+  id        String        @id @default(uuid())
+  studentId String
+  tutorId   String
+  date      DateTime
+  startTime String
+  endTime   String
+  status    BookingStatus @default(PENDING)
+  createdAt DateTime     @default(now())
+
+  // student User         @relation("StudentBookings", fields: [studentId], references: [id])
+  tutor   TutorProfile @relation("TutorBookings", fields: [tutorId], references: [id])
+  review  Review?
+
+  @@map("bookings")
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  studentId String
+  tutorId   String
+  bookingId String   @unique
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  // student User         @relation(fields: [studentId], references: [id])
+  tutor   TutorProfile @relation(fields: [tutorId], references: [id])
+  booking Booking      @relation(fields: [bookingId], references: [id])
+
+  @@map("reviews")
+}
