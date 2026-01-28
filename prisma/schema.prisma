@@ -79,6 +79,9 @@ model Availability {
 
   tutor TutorProfile @relation(fields: [tutorId], references: [id], onDelete: Cascade)
 
+  createdAt DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
   @@map("availability")
 }
 
