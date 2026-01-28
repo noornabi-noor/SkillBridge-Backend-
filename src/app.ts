@@ -5,6 +5,7 @@ import { auth } from "./lib/auth";
 import { tutorRouter } from "./modules/tutor/tutor.routes";
 import { categoryRouter } from "./modules/categories/categories.routes";
 import { availabilityRouter } from "./modules/availability/availability.routes";
+import { bookingRouter } from "./modules/bookings/bookings.routes";
 
 
 const app = express();
@@ -23,6 +24,8 @@ app.use("/api/tutors", tutorRouter);
 app.use("/api/categories", categoryRouter);
 
 app.use("/api/availability", availabilityRouter);
+
+app.use("/api/bookings", bookingRouter);
 
 app.get("/", (req : Request, res: Response)=>{
     res.send("Hello world!");
