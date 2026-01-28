@@ -1,14 +1,6 @@
 import { Review } from "../../../generated/prisma/client";
 import { prisma } from "../../lib/prisma";
 
-// const createReview = async (
-//   data: Omit<Review, "id" | "createdAt" | "updatedAt" | "student" | "tutor" | "booking">
-// ) => {
-//   return prisma.review.create({
-//     data,
-//   });
-// };
-
 const createReview = async (
   data: Omit<Review, "id" | "createdAt" | "updatedAt" | "student" | "tutor" | "booking">
 ) => {
