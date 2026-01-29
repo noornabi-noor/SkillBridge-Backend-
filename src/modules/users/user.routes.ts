@@ -1,18 +1,12 @@
 import express from "express";
 import { usersController } from "./user.controller";
+import { auth, userRoles } from "../../middleware/auth";
 
 const router = express.Router();
 
-// Get all users
-router.get("/", usersController.getAllUsers);
-
-// Get user by ID
-router.get("/:id", usersController.getUserById);
-
-// Get current logged-in user
-router.get("/me", usersController.getCurrentUser);
-
-// Update user status
-router.patch("/:id/status", usersController.updateUserStatus);
+router.get("/", auth(userRoles.ADMIN), usersController.getAllUsers);
+router.get("/:id", auth(userRoles.ADMIN), usersController.getUserById);
+router.get("/me", auth(), usersController.getCurrentUser);
+router.patch("/:id/status", auth(userRoles.ADMIN), usersController.updateUserStatus);
 
 export const usersRouter = router;

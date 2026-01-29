@@ -1,11 +1,12 @@
 import express from "express";
 import { reviewController } from "./review.controller";
+import { auth, userRoles } from "../../middleware/auth";
 
 const router = express.Router();
 
 router.get("/", reviewController.getReviews)
-router.post("/", reviewController.createReview)
-router.patch("/:id", reviewController.updateReview);
-router.delete("/:id", reviewController.deleteReview);
+router.post("/", auth(userRoles.STUDENT), reviewController.createReview)
+router.patch("/:id", auth(userRoles.STUDENT), reviewController.updateReview);
+router.delete("/:id", auth(userRoles.STUDENT), reviewController.deleteReview);
 
 export const reviewRouter = router;
