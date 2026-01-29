@@ -9,6 +9,7 @@ import { bookingRouter } from "./modules/bookings/bookings.routes";
 import { reviewRouter } from "./modules/review/review.routes";
 import { tutorCategoryRouter } from "./modules/tutorCategory/tutorCategory.routes";
 import { adminRouter } from "./modules/admin/admin.routes";
+import { adminAnalyticsRouter } from "./modules/adminAnalytic/adminAnalytic.routes";
 
 
 const app = express();
@@ -35,6 +36,8 @@ app.use("/api/reviews", reviewRouter);
 app.use("/api/tutor-categories", tutorCategoryRouter);
 
 app.use("/api/admin", adminRouter);
+
+app.use("/api/adminAnalytic", adminAnalyticsRouter);
 
 app.get("", (req : Request, res: Response)=>{
     res.send("Hello world!");
