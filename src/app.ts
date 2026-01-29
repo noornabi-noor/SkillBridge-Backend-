@@ -8,6 +8,7 @@ import { availabilityRouter } from "./modules/availability/availability.routes";
 import { bookingRouter } from "./modules/bookings/bookings.routes";
 import { reviewRouter } from "./modules/review/review.routes";
 import { tutorCategoryRouter } from "./modules/tutorCategory/tutorCategory.routes";
+import { adminRouter } from "./modules/admin/admin.routes";
 
 
 const app = express();
@@ -32,6 +33,8 @@ app.use("/api/bookings", bookingRouter);
 app.use("/api/reviews", reviewRouter);
 
 app.use("/api/tutor-categories", tutorCategoryRouter);
+
+app.use("/api/admin", adminRouter);
 
 app.get("", (req : Request, res: Response)=>{
     res.send("Hello world!");
