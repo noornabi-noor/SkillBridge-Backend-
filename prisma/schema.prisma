@@ -26,6 +26,11 @@ enum BookingStatus {
   CANCELLED
 }
 
+enum UserStatus {
+  ACTIVE
+  BANNED
+}
+
 model TutorProfile {
   id           String   @id @default(uuid())
   userId       String   @unique
@@ -132,6 +137,7 @@ model User {
   accounts      Account[]
 
   role          Role      @default(STUDENT)
+  status         UserStatus  @default(ACTIVE)
 
   tutorProfile  TutorProfile?
   studentBookings Booking[] @relation("StudentBookings")
