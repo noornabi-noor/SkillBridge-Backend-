@@ -12,12 +12,11 @@ import { adminRouter } from "./modules/admin/admin.routes";
 import { adminAnalyticsRouter } from "./modules/adminAnalytic/adminAnalytic.routes";
 import { usersRouter } from "./modules/users/user.routes";
 
-
 const app = express();
 app.use(express.json());
 
 app.use(cors({
-    origin: process.env.APP_URL,
+    origin: process.env.APP_URL || "http://localhost:3000",
     credentials: true
 }))
 
@@ -45,6 +44,5 @@ app.use("/api/users", usersRouter);
 app.get("", (req : Request, res: Response)=>{
     res.send("Hello world!");
 });
-
 
 export default app;
