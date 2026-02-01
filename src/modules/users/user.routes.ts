@@ -4,7 +4,7 @@ import { auth, userRoles } from "../../middleware/auth";
 
 const router = express.Router();
 
-router.get("/", auth(userRoles.ADMIN), usersController.getAllUsers);
+router.get("/", usersController.getAllUsers);
 router.get("/:id", auth(userRoles.ADMIN), usersController.getUserById);
 router.get("/me", auth(), usersController.getCurrentUser);
 router.patch("/:id/status", auth(userRoles.ADMIN), usersController.updateUserStatus);

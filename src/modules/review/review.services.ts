@@ -62,10 +62,18 @@ const deleteReview = async (reviewId: string) => {
   return prisma.review.delete({ where: { id: reviewId } });
 };
 
+const getReviewsByTutor = async (tutorId: string) => {
+  return await prisma.review.findMany({
+    where: { tutorId },
+    include: { student: true },
+    orderBy: { createdAt: "desc" },
+  });
+};
 
 export const reviewServices = {
   createReview,
   getReviews,
   updateReview,
   deleteReview,
+  getReviewsByTutor
 };

@@ -4,6 +4,7 @@ import { auth, userRoles } from "../../middleware/auth";
 
 const router = express.Router();
 
+router.get("/tutor/:id", auth(userRoles.TUTOR), reviewController.getReviewsByTutor);
 router.get("/", reviewController.getReviews)
 router.post("/", auth(userRoles.STUDENT), reviewController.createReview)
 router.patch("/:id", auth(userRoles.STUDENT), reviewController.updateReview);

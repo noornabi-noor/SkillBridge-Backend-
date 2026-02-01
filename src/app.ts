@@ -11,6 +11,7 @@ import { tutorCategoryRouter } from "./modules/tutorCategory/tutorCategory.route
 import { adminRouter } from "./modules/admin/admin.routes";
 import { adminAnalyticsRouter } from "./modules/adminAnalytic/adminAnalytic.routes";
 import { usersRouter } from "./modules/users/user.routes";
+import { authRouter } from "./modules/auth/auth.router";
 
 const app = express();
 app.use(express.json());
@@ -40,6 +41,8 @@ app.use("/api/admin", adminRouter);
 app.use("/api/adminAnalytic", adminAnalyticsRouter);
 
 app.use("/api/users", usersRouter);
+
+app.use("/api/me", authRouter);
 
 app.get("", (req : Request, res: Response)=>{
     res.send("Hello world!");

@@ -11,6 +11,7 @@ const createAvailability = async (
   return await prisma.availability.create({
     data: {
       ...data,
+      dayOfWeek: Number(data.dayOfWeek),
       tutorId,
     },
   });
@@ -97,9 +98,7 @@ const updateAvailability = async (
   >,
 ) => {
   const availabilityData = await prisma.availability.findUnique({
-    where: {
-      id: availabilityId,
-    },
+    where: { id: availabilityId },
   });
 
   if (!availabilityData) {
@@ -108,16 +107,23 @@ const updateAvailability = async (
 
   return prisma.availability.update({
     where: { id: availabilityId },
-    data,
+    data: {
+      ...(data.dayOfWeek !== undefined && {
+        dayOfWeek: Number(data.dayOfWeek),
+      }),
+      ...(data.startTime && { startTime: data.startTime }),
+      ...(data.endTime && { endTime: data.endTime }),
+      ...(data.isBooked !== undefined && { isBooked: data.isBooked }),
+    },
   });
 };
 
-const deleteAvailability = async(avilabilityId: string) => {
-    return await prisma.availability.delete({
-        where: {
-            id: avilabilityId
-        },
-    });
+const deleteAvailability = async (avilabilityId: string) => {
+  return await prisma.availability.delete({
+    where: {
+      id: avilabilityId,
+    },
+  });
 };
 
 export const availabilityServices = {
@@ -125,5 +131,5 @@ export const availabilityServices = {
   getAllAvailabilty,
   getSingleAvailability,
   updateAvailability,
-  deleteAvailability
+  deleteAvailability,
 };

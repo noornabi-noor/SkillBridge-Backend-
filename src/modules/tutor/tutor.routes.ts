@@ -4,10 +4,12 @@ import { tutorController } from "./tutor.controller";
 
 const router = express.Router();
 
+router.get("/by-user/:userId", tutorController.getTutorByUserId);
+router.get("/dashboard/:id", auth(userRoles.TUTOR), tutorController.getTutorDashboardStats);
 router.get("/", tutorController.getAllTutors);
 router.get("/:id", tutorController.getSingleUser);
-router.post("/", auth(userRoles.TUTOR), tutorController.createTutorProfile);
-router.patch("/:id", auth(userRoles.TUTOR, userRoles.ADMIN), tutorController.updateTutorProfile);
+router.post("/", auth(), tutorController.createTutorProfile);
+router.patch("/", auth(userRoles.TUTOR), tutorController.updateTutorProfile);
 router.delete("/:id", auth(userRoles.TUTOR, userRoles.ADMIN), tutorController.deleteTutorProfile);
 
 export const tutorRouter = router;

@@ -11,6 +11,7 @@ declare global {
         name: string;
         role: string;
         emailVerified: boolean;
+        image?: string;
       };
     }
   }
@@ -27,7 +28,11 @@ export const auth =
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const session = await betterAuth.api.getSession({
-        headers: req.headers as any,
+        headers: {
+          cookie: req.headers.cookie || "", // ensure string
+          authorization: req.headers.authorization || "",
+          // add any other headers you need explicitly
+        },
       });
 
       if (!session) {
@@ -63,8 +68,6 @@ export const auth =
           message: "You do not have permission to access this resource!",
         });
       }
-
-      console.log("Authenticated session:", session);
 
       next();
     } catch (error) {

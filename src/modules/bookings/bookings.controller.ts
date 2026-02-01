@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { bookingServices } from "./bookings.services";
 
-
 const createBooking = async (req: Request, res: Response) => {
   try {
     const result = await bookingServices.createBooking(req.body);
@@ -88,10 +87,43 @@ const deleteBooking = async (req: Request, res: Response) => {
   }
 };
 
+const getBookingsByTutor = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const bookings = await bookingServices.getBookingsByTutor(id as string);
+
+    return res.status(200).json({ success: true, data: bookings });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const getUpcomingBookingsByTutor = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params; // tutorProfileId
+
+    const bookings = await bookingServices.getUpcomingBookingsByTutor(
+      id as string,
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: bookings,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 export const bookingController = {
   createBooking,
   getAllBookings,
   getBookingById,
   updateBooking,
   deleteBooking,
+  getBookingsByTutor,
+  getUpcomingBookingsByTutor,
 };
