@@ -1,14 +1,23 @@
-import { Booking } from "../../../generated/prisma/client";
 import { prisma } from "../../lib/prisma";
 
 const createBooking = async (
-  data: Omit<
-    Booking,
-    "id" | "createdAt" | "updatedAt" | "status" | "student" | "tutor" | "review"
-  >,
+  studentId: string,
+  data: {
+    tutorId: string;
+    date: Date;
+    startTime: string;
+    endTime: string;
+  },
 ) => {
   return prisma.booking.create({
-    data,
+    data: {
+      tutorId: data.tutorId,
+      date: data.date,
+      startTime: data.startTime,
+      endTime: data.endTime,
+      status: "PENDING",
+      studentId,
+    },
   });
 };
 
@@ -20,6 +29,14 @@ const getAllBookings = async () => {
           id: true,
           bio: true,
           pricePerHour: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true,
+            },
+          },
         },
       },
       student: {
@@ -35,6 +52,7 @@ const getAllBookings = async () => {
     },
   });
 };
+
 
 const getBookingById = async (bookingId: string) => {
   const booking = await prisma.booking.findUnique({
@@ -117,6 +135,7 @@ const getUpcomingBookingsByTutor = async (tutorProfileId: string) => {
     orderBy: { date: "asc" },
   });
 };
+
 
 export const bookingServices = {
   createBooking,

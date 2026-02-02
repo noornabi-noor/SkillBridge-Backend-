@@ -1,9 +1,37 @@
 import { Request, Response } from "express";
 import { bookingServices } from "./bookings.services";
 
+// const createBooking = async (req: Request, res: Response) => {
+//   try {
+//     const studentId = req.user!.id;
+
+//     const result = await bookingServices.createBooking(
+//       studentId,
+//       req.body,
+//     );
+
+//     res.status(201).json({
+//       success: true,
+//       data: result,
+//     });
+//   } catch (error: any) {
+//     res.status(400).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+
 const createBooking = async (req: Request, res: Response) => {
   try {
-    const result = await bookingServices.createBooking(req.body);
+    const studentId = req.user!.id;
+
+    const result = await bookingServices.createBooking(studentId, {
+      tutorId: req.body.tutorId,
+      date: new Date(req.body.date),  // convert string to Date
+      startTime: req.body.startTime,
+      endTime: req.body.endTime,
+    });
 
     res.status(201).json({
       success: true,
