@@ -3,35 +3,24 @@ import { authServices } from "./auth.services";
 
 const getMe = async (req: Request, res: Response) => {
   if (!req.user) {
-    return res.status(401).json({
-      success: false,
-      message: "Unauthorized",
-    });
+    return res.status(401).json({ success: false, message: "Unauthorized" });
   }
 
-  return res.status(200).json({
-    success: true,
-    data: {
-      id: req.user.id,
-      name: req.user.name,
-      email: req.user.email,
-      role: req.user.role,
-      image: req.user.image || null,
-    },
-  });
+  const user = await authServices.getMe(req.user);
+
+  if (!user) {
+    return res.status(404).json({ success: false, message: "User not found" });
+  }
+
+  return res.status(200).json({ success: true, data: user });
 };
 
-
-  const signOut = async (req: Request, res: Response) => {
+const signOut = async (req: Request, res: Response) => {
   await authServices.signOut(req.headers);
-
-  return res.status(200).json({
-    success: true,
-    message: "Logged out successfully",
-  });
+  return res.status(200).json({ success: true, message: "Logged out successfully" });
 };
 
 export const authController = {
   getMe,
-  signOut
+  signOut,
 };

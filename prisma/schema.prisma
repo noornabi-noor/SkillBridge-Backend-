@@ -105,6 +105,7 @@ model Booking {
   tutor  TutorProfile @relation("TutorBookings", fields: [tutorId], references: [id], onDelete: Cascade)
   review Review?
 
+  @@index([tutorId, date])
   @@map("bookings")
 }
 

@@ -83,6 +83,31 @@ const updateCategory = async (
   });
 };
 
+export const getDashboardStats = async () => {
+  // Total users, students, tutors, bookings
+  const totalUsers = await prisma.user.count();
+  const totalStudents = await prisma.user.count({ where: { role: "STUDENT" } });
+  const totalTutors = await prisma.user.count({ where: { role: "TUTOR" } });
+  const totalBookings = await prisma.booking.count();
+
+  // New users in last 3 days
+  const threeDaysAgo = new Date();
+  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+  const newUsers = await prisma.user.findMany({
+    where: { createdAt: { gte: threeDaysAgo } },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return {
+    totalUsers,
+    totalStudents,
+    totalTutors,
+    totalBookings,
+    newUsers,
+  };
+};
+
 export const adminServices = {
     getAllUsers,
     updateUser,
@@ -90,4 +115,5 @@ export const adminServices = {
     getAllBookings,
     createCategory,
     updateCategory,
+    getDashboardStats
 }

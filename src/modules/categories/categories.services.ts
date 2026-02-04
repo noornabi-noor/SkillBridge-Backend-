@@ -4,6 +4,20 @@ import { prisma } from "../../lib/prisma";
 const createCategories = async (
   data: Omit<Category, "id" | "createdAt" | "updatedAt" | "tutors">,
 ) => {
+
+  const existing = await prisma.category.findFirst({
+    where: {
+      name: {
+        equals: data.name,
+        mode: "insensitive", 
+      },
+    },
+  });
+
+  if (existing) {
+    throw new Error(`Category "${data.name}" already exists`);
+  }
+
   return await prisma.category.create({
     data: {
       ...data,

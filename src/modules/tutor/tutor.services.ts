@@ -1,43 +1,6 @@
 import { TutorProfile } from "../../../generated/prisma/client";
 import { prisma } from "../../lib/prisma";
 
-// const createTutorProfile = async (
-//   data: Omit<
-//     TutorProfile,
-//     | "id"
-//     | "createdAt"
-//     | "updatedAt"
-//     | "availability"
-//     | "user"
-//     | "bookings"
-//     | "reviews"
-//     | "categories"
-//   >,
-//   userId: string,
-// ) => {
-//   return await prisma.tutorProfile.create({
-//     // data: {
-//     //   ...data,
-//     //   userId,
-//     // },
-
-
-//     data: {
-//       bio: data.bio,
-//       experience: data.experience, // must be Int
-//       pricePerHour: data.pricePerHour, // must be Int
-//       userId,
-//       // Handle categories separately
-//       categories: {
-//         create: data.categories?.map((name: string) => ({
-//           category: { connectOrCreate: { where: { name }, create: { name } } }
-//         })),
-//       },
-//     },
-
-//   });
-// };
-
 type TutorProfileInput = Omit<
   TutorProfile,
   | "id"
@@ -48,7 +11,7 @@ type TutorProfileInput = Omit<
   | "bookings"
   | "reviews"
 > & {
-  categories?: string[]; // add this
+  categories?: string[];
 };
 
 const createTutorProfile = async (data: TutorProfileInput, userId: string) => {
@@ -58,42 +21,42 @@ const createTutorProfile = async (data: TutorProfileInput, userId: string) => {
       bio: data.bio,
       experience: data.experience,
       pricePerHour: data.pricePerHour,
-      categories: data.categories && data.categories.length > 0
-        ? {
-            deleteMany: {}, // clear old categories
-            create: data.categories.map((name: string) => ({
-              category: {
-                connectOrCreate: {
-                  where: { name },
-                  create: { name },
+      categories:
+        data.categories && data.categories.length > 0
+          ? {
+              deleteMany: {}, // clear old categories
+              create: data.categories.map((name: string) => ({
+                category: {
+                  connectOrCreate: {
+                    where: { name },
+                    create: { name },
+                  },
                 },
-              },
-            })),
-          }
-        : {},
+              })),
+            }
+          : {},
     },
     create: {
       userId,
       bio: data.bio,
       experience: data.experience,
       pricePerHour: data.pricePerHour,
-      categories: data.categories && data.categories.length > 0
-        ? {
-            create: data.categories.map((name: string) => ({
-              category: {
-                connectOrCreate: {
-                  where: { name },
-                  create: { name },
+      categories:
+        data.categories && data.categories.length > 0
+          ? {
+              create: data.categories.map((name: string) => ({
+                category: {
+                  connectOrCreate: {
+                    where: { name },
+                    create: { name },
+                  },
                 },
-              },
-            })),
-          }
-        : {},
+              })),
+            }
+          : {},
     },
   });
 };
-
-
 
 const getAllTutors = async () => {
   return await prisma.tutorProfile.findMany({
@@ -107,6 +70,7 @@ const getAllTutors = async () => {
           name: true,
           email: true,
           image: true,
+          phone: true,
         },
       },
       categories: {
@@ -131,6 +95,7 @@ const getSingleTutor = async (id: string) => {
           name: true,
           email: true,
           image: true,
+          phone: true,
         },
       },
       categories: {
@@ -161,7 +126,6 @@ const getSingleTutor = async (id: string) => {
   });
 };
 
-
 const updateTutorProfile = async (userId: string, data: TutorProfileInput) => {
   return prisma.tutorProfile.upsert({
     where: { userId },
@@ -171,14 +135,15 @@ const updateTutorProfile = async (userId: string, data: TutorProfileInput) => {
       pricePerHour: data.pricePerHour,
       categories: {
         deleteMany: {},
-        create: data.categories?.map((name: string) => ({
-          category: {
-            connectOrCreate: {
-              where: { name },
-              create: { name },
+        create:
+          data.categories?.map((name: string) => ({
+            category: {
+              connectOrCreate: {
+                where: { name },
+                create: { name },
+              },
             },
-          },
-        })) || [],
+          })) || [],
       },
     },
     create: {
@@ -190,35 +155,92 @@ const updateTutorProfile = async (userId: string, data: TutorProfileInput) => {
   });
 };
 
+const deleteTutorProfile = async (userId: string) => {
+  const tutorData = await prisma.tutorProfile.findFirst({
+    where: {
+      userId,
+    },
+  });
 
-const deleteTutorProfile = async(userId: string) => {
-    const tutorData = await prisma.tutorProfile.findFirst({
-        where: {
-            userId
-        }
-    });
+  if (!tutorData) {
+    throw new Error("Tutor profile not found");
+  }
 
-    if(!tutorData){
-        throw new Error("Tutor profile not found");
-    }
-
-    return prisma.tutorProfile.delete({
-        where: {
-            userId
-        }
-    });
+  return prisma.tutorProfile.delete({
+    where: {
+      userId,
+    },
+  });
 };
 
-const getTutorDashboardStats = async (userId: string) => {
-  // 1️⃣ Fetch tutor profile by userId
+// const getTutorDashboardStats = async (userId: string) => {
+//   const profile = await prisma.tutorProfile.findFirst({
+//     where: { userId },
+//     include: {
+//       categories: { include: { category: true } },
+//       user: {
+//         select: {
+//           id: true,
+//           name: true,
+//           email: true,
+//           phone: true,
+//           image: true,
+//         },
+//       },
+//     },
+//   });
+
+//   if (!profile) {
+//     return {
+//       user: null,
+//       profile: null,
+//       bookings: [],
+//       reviews: [],
+//       totalBookings: 0,
+//       totalReviews: 0,
+//       averageRating: 0,
+//       upcomingSessions: 0,
+//     };
+//   }
+
+//   const bookings = await prisma.booking.findMany({
+//     where: { tutorId: profile.id },
+//   });
+
+//   const reviews = await prisma.review.findMany({
+//     where: { tutorId: profile.id },
+//   });
+
+//   return {
+//     user: profile.user, 
+//     profile,
+//     bookings,
+//     reviews,
+//     totalBookings: bookings.length,
+//     totalReviews: reviews.length,
+//     averageRating:
+//       reviews.length === 0
+//         ? 0
+//         : reviews.reduce((s, r) => s + r.rating, 0) / reviews.length,
+//     upcomingSessions: bookings.filter(
+//       (b) => new Date(b.date) > new Date(),
+//     ).length,
+//   };
+// };
+
+export async function getTutorDashboardStats(userId: string) {
+  // 1️⃣ Get the tutor profile including the user
   const profile = await prisma.tutorProfile.findFirst({
     where: { userId },
-    include: { categories: { include: { category: true } } },
+    include: {
+      categories: { include: { category: true } },
+      user: { select: { id: true, name: true, email: true, phone: true, image: true } },
+    },
   });
 
   if (!profile) {
-    // user is not a tutor yet
     return {
+      user: null,
       profile: null,
       bookings: [],
       reviews: [],
@@ -229,34 +251,51 @@ const getTutorDashboardStats = async (userId: string) => {
     };
   }
 
-  // 2️⃣ Use the correct tutorId from profile.id for bookings & reviews
-  const bookings = await prisma.booking.findMany({ where: { tutorId: profile.id } });
-  const reviews = await prisma.review.findMany({ where: { tutorId: profile.id } });
+  // 2️⃣ Fetch bookings correctly (linked to userId, not profile.id)
+  const bookings = await prisma.booking.findMany({
+    where: { tutorId: profile.userId }, // ✅ fix here
+  });
 
-  const totalBookings = bookings.length;
+  // 3️⃣ Fetch reviews correctly
+  const reviews = await prisma.review.findMany({
+    where: { tutorId: profile.userId }, // ✅ fix here
+  });
+
   const totalReviews = reviews.length;
-  const averageRating = totalReviews === 0 ? 0 : reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews;
+
+  // 4️⃣ Calculate average rating correctly
+  const averageRating =
+    totalReviews === 0
+      ? 0
+      : parseFloat((reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews).toFixed(1));
+
+  // 5️⃣ Upcoming sessions
   const upcomingSessions = bookings.filter(b => new Date(b.date) > new Date()).length;
 
   return {
+    user: profile.user,
     profile,
     bookings,
     reviews,
-    totalBookings,
+    totalBookings: bookings.length,
     totalReviews,
-    averageRating,
+    averageRating, 
     upcomingSessions,
   };
-};
-
+}
 
 const getSingleTutorByUserId = async (userId: string) => {
   return await prisma.tutorProfile.findFirst({
     where: { userId },
-    include: { categories: { include: { category: true } } }, 
+    include: { 
+      categories: { 
+        include: { 
+          category: true 
+        } 
+      } 
+    },
   });
 };
-
 
 export const tutorServices = {
   createTutorProfile,
@@ -265,5 +304,5 @@ export const tutorServices = {
   updateTutorProfile,
   deleteTutorProfile,
   getTutorDashboardStats,
-  getSingleTutorByUserId
+  getSingleTutorByUserId,
 };

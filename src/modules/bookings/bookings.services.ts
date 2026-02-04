@@ -1,5 +1,44 @@
 import { prisma } from "../../lib/prisma";
 
+// const createBooking = async (
+//   studentId: string,
+//   data: {
+//     tutorId: string;
+//     date: Date;
+//     startTime: string;
+//     endTime: string;
+//   },
+// ) => {
+//   const hasConflict = await prisma.booking.findFirst({
+//     where: {
+//       tutorId: data.tutorId,
+//       date: data.date,
+//       status: { in: ["PENDING", "CONFIRMED"] },
+//       OR: [
+//         {
+//           startTime: { lt: data.endTime },
+//           endTime: { gt: data.startTime },
+//         },
+//       ],
+//     },
+//   });
+
+//   if (hasConflict) {
+//     throw new Error("This time slot is already booked");
+//   }
+
+//   return prisma.booking.create({
+//     data: {
+//       tutorId: data.tutorId,
+//       date: data.date,
+//       startTime: data.startTime,
+//       endTime: data.endTime,
+//       status: "PENDING",
+//       studentId,
+//     },
+//   });
+// };
+
 const createBooking = async (
   studentId: string,
   data: {
@@ -9,14 +48,39 @@ const createBooking = async (
     endTime: string;
   },
 ) => {
+  // Start and end of the day for the tutor
+  const startOfDay = new Date(data.date);
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const endOfDay = new Date(data.date);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  // Check **only for overlapping time slots for this tutor**
+  const hasConflict = await prisma.booking.findFirst({
+    where: {
+      tutorId: data.tutorId, // same tutor
+      date: { gte: startOfDay, lte: endOfDay },
+      status: { in: ["PENDING", "CONFIRMED"] },
+      AND: [
+        { startTime: { lt: data.endTime } },
+        { endTime: { gt: data.startTime } },
+      ],
+    },
+  });
+
+  if (hasConflict) {
+    throw new Error("This time slot is already booked for this tutor");
+  }
+
+  // ✅ Create booking
   return prisma.booking.create({
     data: {
       tutorId: data.tutorId,
+      studentId,
       date: data.date,
       startTime: data.startTime,
       endTime: data.endTime,
       status: "PENDING",
-      studentId,
     },
   });
 };
@@ -52,7 +116,6 @@ const getAllBookings = async () => {
     },
   });
 };
-
 
 const getBookingById = async (bookingId: string) => {
   const booking = await prisma.booking.findUnique({
@@ -119,23 +182,66 @@ const getBookingsByTutor = async (tutorProfileId: string) => {
   });
 };
 
-const getUpcomingBookingsByTutor = async (tutorProfileId: string) => {
+// const getUpcomingBookingsByTutor = async (tutorProfileId: string) => {
+//   const today = new Date();
+//   today.setHours(0, 0, 0, 0);
+
+//   return prisma.booking.findMany({
+//     where: {
+//       tutorId: tutorProfileId,
+//       date: { gte: today },
+//       status: { in: ["CONFIRMED", "PENDING"] },
+//     },
+//     include: {
+//       student: { select: { id: true, name: true } },
+//     },
+//     orderBy: { date: "asc" },
+//   });
+// };
+
+const getUpcomingBookingsByTutor = async (
+  tutorProfileId: string,
+  studentId?: string,
+) => {
   const today = new Date();
-  today.setHours(0, 0, 0, 0); // start of today
+  today.setHours(0, 0, 0, 0);
 
   return prisma.booking.findMany({
     where: {
       tutorId: tutorProfileId,
-      date: { gte: today }, // include today
+      ...(studentId && { studentId }), // optional filter for current student
+      date: { gte: today },
       status: { in: ["CONFIRMED", "PENDING"] },
     },
-    include: {
-      student: { select: { id: true, name: true } },
-    },
-    orderBy: { date: "asc" },
+    include: { student: { select: { id: true, name: true } } },
+    orderBy: [{ date: "asc" }, { startTime: "asc" }],
   });
 };
 
+const getBookingsByStudent = async (studentId: string) => {
+  return prisma.booking.findMany({
+    where: {
+      studentId: studentId,
+    },
+    include: {
+      tutor: {
+        select: {
+          id: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+};
 
 export const bookingServices = {
   createBooking,
@@ -145,4 +251,5 @@ export const bookingServices = {
   deleteBooking,
   getBookingsByTutor,
   getUpcomingBookingsByTutor,
+  getBookingsByStudent,
 };

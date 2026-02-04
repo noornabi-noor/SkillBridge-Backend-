@@ -101,6 +101,18 @@ const updateCategory = async (req: Request, res: Response) => {
   }
 };
 
+export const getDashboardStats = async (req: Request, res: Response) => {
+  try {
+    const stats = await adminServices.getDashboardStats();
+    res.status(200).json({ success: true, data: stats });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch dashboard stats",
+    });
+  }
+};
+
 export const adminController = {
   getAllUsers,
   updateUser,
@@ -108,4 +120,5 @@ export const adminController = {
   getAllBookings,
   createCategory,
   updateCategory,
+  getDashboardStats
 };
