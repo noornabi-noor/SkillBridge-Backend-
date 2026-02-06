@@ -193,9 +193,9 @@ src/
 ├── app.ts                      # Express app configuration
 └── server.ts                   # Server bootstrap
 
----
-
 Each module follows a strict **routes → controller → services** pattern.
+
+```
 
 ## 🌐 API Routes (Overview)
 
@@ -321,7 +321,7 @@ npm run dev
 ## 🚀 Getting Started
 ### 1️⃣ Clone the repository
 ```bash
-git clone https://github.com/your-username/skillbridge-backend.git
+git clone https://github.com/noornabi-noor/SkillBridge-Backend-.git
 cd skillbridge-backend
 ```
 
