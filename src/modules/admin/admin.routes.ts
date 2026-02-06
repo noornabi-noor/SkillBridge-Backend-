@@ -6,14 +6,10 @@ const router = express.Router();
 
 router.get("/users", auth(userRoles.ADMIN), adminController.getAllUsers);
 router.patch("/users/:id", auth(userRoles.ADMIN), adminController.updateUser);
-
 router.get("/tutor", auth(userRoles.ADMIN), adminController.getAllTutor);
 router.get("/bookings", auth(userRoles.ADMIN), adminController.getAllBookings);
-
 router.get("/dashboard", auth(userRoles.ADMIN), adminController.getDashboardStats);
-
 router.post("/categories", auth(userRoles.ADMIN), adminController.createCategory);
 router.patch("/categories/:id", auth(userRoles.ADMIN), adminController.updateCategory);
-
 
 export const adminRouter = router;
