@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { bookingServices } from "./bookings.services";
 import { prisma } from "../../lib/prisma";
 
-
 const createBooking = async (req: Request, res: Response) => {
   try {
     const studentId = req.user!.id;
@@ -60,25 +59,6 @@ const getBookingById = async (req: Request, res: Response) => {
   }
 };
 
-// const updateBooking = async (req: Request, res: Response) => {
-//   try {
-//     const { id } = req.params;
-
-//     const result = await bookingServices.updateBooking(id as string, req.body);
-
-//     res.status(200).json({
-//       success: true,
-//       data: result,
-//     });
-//   } catch (error: any) {
-//     res.status(400).json({
-//       success: false,
-//       message: error.message,
-//     });
-//   }
-// };
-
-// bookings.controller.ts
 const updateBooking = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -123,7 +103,6 @@ const updateBooking = async (req: Request, res: Response) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
-
 
 const deleteBooking = async (req: Request, res: Response) => {
   try {
@@ -187,7 +166,6 @@ const getUpcomingBookingsByTutor = async (req: Request, res: Response) => {
   }
 };
 
-
 const getMyBookings = async (req: Request, res: Response) => {
   try {
     const studentId = req.user!.id;
@@ -213,7 +191,38 @@ const getMyBookings = async (req: Request, res: Response) => {
   }
 };
 
+const getTutorPublicBookings = async (req: Request, res: Response) => {
+  // const { tutorId } = req.params;
 
+  let tutorId = req.params.id;
+
+    // Ensure tutorId is a string, not an array
+    if (Array.isArray(tutorId)) {
+      tutorId = tutorId[0]; // pick the first one
+    }
+
+    if (!tutorId) {
+      return res.status(400).json({ success: false, message: "Tutor ID is required" });
+    }
+
+  const bookings = await prisma.booking.findMany({
+    where: {
+      tutorId,
+      status: { in: ["PENDING", "CONFIRMED"] }, // only blocking ones
+      date: { gte: new Date() },
+    },
+    select: {
+      id: true,
+      date: true,
+      startTime: true,
+      endTime: true,
+      status: true,
+    },
+    orderBy: { date: "asc" },
+  });
+
+  res.json({ data: bookings });
+};
 
 export const bookingController = {
   createBooking,
@@ -223,5 +232,6 @@ export const bookingController = {
   deleteBooking,
   getBookingsByTutor,
   getUpcomingBookingsByTutor,
-  getMyBookings
+  getMyBookings,
+  getTutorPublicBookings
 };

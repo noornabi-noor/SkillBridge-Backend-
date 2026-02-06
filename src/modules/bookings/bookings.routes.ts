@@ -4,12 +4,9 @@ import { auth, userRoles } from "../../middleware/auth";
 
 const router = express.Router();
 
-
 router.get("/tutor/:id/upcoming", auth(userRoles.TUTOR), bookingController.getUpcomingBookingsByTutor);
 router.get("/student/me",auth(userRoles.STUDENT),bookingController.getMyBookings);
-
-
-// router.get("/tutor/:id/upcoming", auth(userRoles.TUTOR), bookingController.getUpcomingBookingsByTutor);
+router.get("/tutor/:tutorId/public", auth(userRoles.STUDENT), bookingController.getTutorPublicBookings);
 router.get("/tutor/:id", auth(userRoles.TUTOR), bookingController.getBookingsByTutor);
 router.get("/", auth(), bookingController.getAllBookings);
 router.get("/:id", auth(userRoles.ADMIN, userRoles.TUTOR), bookingController.getBookingById);

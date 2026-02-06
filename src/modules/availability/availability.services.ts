@@ -126,10 +126,31 @@ const deleteAvailability = async (avilabilityId: string) => {
   });
 };
 
+const getAvailabilityByTutor = async (tutorId: string) => {
+  return prisma.availability.findMany({
+    where: {
+      tutorId,
+      isBooked: false,
+    },
+    select: {
+      id: true,
+      dayOfWeek: true,
+      startTime: true,
+      endTime: true,
+    },
+    orderBy: [
+      { dayOfWeek: "asc" },
+      { startTime: "asc" },
+    ],
+  });
+};
+
+
 export const availabilityServices = {
   createAvailability,
   getAllAvailabilty,
   getSingleAvailability,
   updateAvailability,
   deleteAvailability,
+  getAvailabilityByTutor
 };

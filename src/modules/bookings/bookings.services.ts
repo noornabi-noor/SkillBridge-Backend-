@@ -1,43 +1,30 @@
 import { prisma } from "../../lib/prisma";
 
-// const createBooking = async (
-//   studentId: string,
-//   data: {
-//     tutorId: string;
-//     date: Date;
-//     startTime: string;
-//     endTime: string;
-//   },
-// ) => {
-//   const hasConflict = await prisma.booking.findFirst({
-//     where: {
-//       tutorId: data.tutorId,
-//       date: data.date,
-//       status: { in: ["PENDING", "CONFIRMED"] },
-//       OR: [
-//         {
-//           startTime: { lt: data.endTime },
-//           endTime: { gt: data.startTime },
-//         },
-//       ],
-//     },
-//   });
+const toMinutes = (time: string): number => {
+  time = time.trim();
 
-//   if (hasConflict) {
-//     throw new Error("This time slot is already booked");
-//   }
+  // 24-hour format HH:MM
+  const match24 = time.match(/^([01]?\d|2[0-3]):([0-5]\d)$/);
+  if (match24) {
+    const h = Number(match24[1]);
+    const m = Number(match24[2]);
+    return h * 60 + m;
+  }
 
-//   return prisma.booking.create({
-//     data: {
-//       tutorId: data.tutorId,
-//       date: data.date,
-//       startTime: data.startTime,
-//       endTime: data.endTime,
-//       status: "PENDING",
-//       studentId,
-//     },
-//   });
-// };
+  // 12-hour format HH:MM AM/PM
+  const match12 = time.match(/^(\d{1,2}):([0-5]\d)\s?(AM|PM)$/i);
+  if (match12 && match12[1] && match12[2] && match12[3]) {
+    const h = Number(match12[1]);
+    const m = Number(match12[2]);
+    const period = match12[3].toUpperCase(); // safe now
+
+    let hours = h === 12 ? 0 : h;
+    if (period === "PM") hours += 12;
+    return hours * 60 + m;
+  }
+
+  throw new Error(`Invalid time format: ${time}`);
+};
 
 const createBooking = async (
   studentId: string,
@@ -46,33 +33,34 @@ const createBooking = async (
     date: Date;
     startTime: string;
     endTime: string;
-  },
+  }
 ) => {
-  // Start and end of the day for the tutor
-  const startOfDay = new Date(data.date);
-  startOfDay.setHours(0, 0, 0, 0);
+  const startMin = toMinutes(data.startTime);
+  const endMin = toMinutes(data.endTime);
 
-  const endOfDay = new Date(data.date);
-  endOfDay.setHours(23, 59, 59, 999);
+  if (startMin >= endMin) {
+    throw new Error("End time must be after start time");
+  }
 
-  // Check **only for overlapping time slots for this tutor**
-  const hasConflict = await prisma.booking.findFirst({
+  // fetch bookings on SAME DATE only
+  const existingBookings = await prisma.booking.findMany({
     where: {
-      tutorId: data.tutorId, // same tutor
-      date: { gte: startOfDay, lte: endOfDay },
+      tutorId: data.tutorId,
+      date: data.date,
       status: { in: ["PENDING", "CONFIRMED"] },
-      AND: [
-        { startTime: { lt: data.endTime } },
-        { endTime: { gt: data.startTime } },
-      ],
     },
   });
 
-  if (hasConflict) {
-    throw new Error("This time slot is already booked for this tutor");
+  //manual overlap check (CORRECT)
+  for (const b of existingBookings) {
+    const bStart = toMinutes(b.startTime);
+    const bEnd = toMinutes(b.endTime);
+
+    if (startMin < bEnd && endMin > bStart) {
+      throw new Error("This time slot is already booked for this tutor");
+    }
   }
 
-  // ✅ Create booking
   return prisma.booking.create({
     data: {
       tutorId: data.tutorId,
@@ -84,6 +72,7 @@ const createBooking = async (
     },
   });
 };
+
 
 const getAllBookings = async () => {
   return prisma.booking.findMany({
@@ -181,23 +170,6 @@ const getBookingsByTutor = async (tutorProfileId: string) => {
     orderBy: { createdAt: "desc" },
   });
 };
-
-// const getUpcomingBookingsByTutor = async (tutorProfileId: string) => {
-//   const today = new Date();
-//   today.setHours(0, 0, 0, 0);
-
-//   return prisma.booking.findMany({
-//     where: {
-//       tutorId: tutorProfileId,
-//       date: { gte: today },
-//       status: { in: ["CONFIRMED", "PENDING"] },
-//     },
-//     include: {
-//       student: { select: { id: true, name: true } },
-//     },
-//     orderBy: { date: "asc" },
-//   });
-// };
 
 const getUpcomingBookingsByTutor = async (
   tutorProfileId: string,
