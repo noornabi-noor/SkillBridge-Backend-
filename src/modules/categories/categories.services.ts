@@ -33,20 +33,46 @@ const getAllCategory = async () => {
       name: true,
       createdAt: true,
       updatedAt: true,
+      // tutors: {
+      //   select: {
+      //     tutor: {
+      //       select: {
+      //         id: true,
+      //         userId: true,
+      //         bio: true,
+      //         pricePerHour: true,
+      //         experience: true,
+      //         rating: true,
+      //       },
+      //     },
+      //   },
+      // },
+
+
       tutors: {
-        select: {
-          tutor: {
-            select: {
-              id: true,
-              userId: true,
-              bio: true,
-              pricePerHour: true,
-              experience: true,
-              rating: true,
-            },
+  select: {
+    tutor: {
+      select: {
+        id: true,
+        userId: true,
+        bio: true,
+        pricePerHour: true,
+        experience: true,
+        rating: true,
+        user: {
+          select: {
+            name: true,
+            image: true,
+            email: true, // optional if needed
           },
         },
       },
+    },
+  },
+},
+
+
+
     },
   });
 };

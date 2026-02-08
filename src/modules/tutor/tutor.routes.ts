@@ -4,6 +4,7 @@ import { tutorController } from "./tutor.controller";
 
 const router = express.Router();
 
+router.get("/top-tutor", tutorController.getTopRatedTutor);
 router.get("/by-user/:userId", tutorController.getTutorByUserId);
 router.get("/dashboard/:id", auth(userRoles.TUTOR), tutorController.getTutorDashboardStats);
 router.get("/", tutorController.getAllTutors);

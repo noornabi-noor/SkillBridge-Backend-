@@ -125,6 +125,15 @@ const getTutorByUserId = async (req: Request, res: Response) => {
   }
 };
 
+const getTopRatedTutor = async(req: Request, res: Response) => {
+  try {
+    const result = await tutorServices.getTopRatedTutor();
+    res.status(200).json({ success: true, data: result });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+}
+
 export const tutorController = {
   createTutorProfile,
   getAllTutors,
@@ -133,4 +142,5 @@ export const tutorController = {
   deleteTutorProfile,
   getTutorDashboardStats,
   getTutorByUserId,
+  getTopRatedTutor
 };

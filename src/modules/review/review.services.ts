@@ -44,26 +44,6 @@ const getReviews = async (tutorId?: string, studentId?: string) => {
   });
 };
 
-// const updateReview = async (
-//   reviewId: string,
-//   data: Partial<Pick<Review, "rating" | "comment">>
-// ) => {
-//   const review = await prisma.review.findUnique({ where: { id: reviewId } });
-//   if (!review) throw new Error("Review not found");
-
-//   return prisma.review.update({
-//     where: { id: reviewId },
-//     data,
-//   });
-// };
-
-// const deleteReview = async (reviewId: string) => {
-//   const review = await prisma.review.findUnique({ where: { id: reviewId } });
-//   if (!review) throw new Error("Review not found");
-
-//   return prisma.review.delete({ where: { id: reviewId } });
-// };
-
 const updateReview = async (
   reviewId: string,
   data: Partial<Pick<Review, "rating" | "comment">>
@@ -96,7 +76,6 @@ const updateReview = async (
 
 
 const deleteReview = async (reviewId: string) => {
-  // 1️⃣ Get review first
   const review = await prisma.review.findUnique({
     where: { id: reviewId },
   });
@@ -104,13 +83,9 @@ const deleteReview = async (reviewId: string) => {
   if (!review) throw new Error("Review not found");
 
   const tutorId = review.tutorId;
-
-  // 2️⃣ Delete review
   await prisma.review.delete({
     where: { id: reviewId },
   });
-
-  // 3️⃣ Get remaining reviews for tutor
   const remainingReviews = await prisma.review.findMany({
     where: { tutorId },
   });
@@ -121,8 +96,6 @@ const deleteReview = async (reviewId: string) => {
     totalReviews === 0
       ? 0
       : remainingReviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews;
-
-  // 4️⃣ Update tutor profile rating
   await prisma.tutorProfile.update({
     where: { id: tutorId },
     data: {
@@ -133,7 +106,6 @@ const deleteReview = async (reviewId: string) => {
 
   return true;
 };
-
 
 const getReviewsByTutor = async (tutorId: string) => {
   return await prisma.review.findMany({

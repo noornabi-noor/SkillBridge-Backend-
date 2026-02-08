@@ -246,6 +246,18 @@ const getSingleTutorByUserId = async (userId: string) => {
   });
 };
 
+const getTopRatedTutor = async() => {
+  return await prisma.tutorProfile.findMany({
+    orderBy: {
+      rating: "desc"
+    },
+    take: 6,
+    include: {
+      user: true
+    }
+  });
+};
+
 export const tutorServices = {
   createTutorProfile,
   getAllTutors,
@@ -254,4 +266,5 @@ export const tutorServices = {
   deleteTutorProfile,
   getTutorDashboardStats,
   getSingleTutorByUserId,
+  getTopRatedTutor
 };
