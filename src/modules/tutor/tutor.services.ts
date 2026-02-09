@@ -14,49 +14,91 @@ type TutorProfileInput = Omit<
   categories?: string[];
 };
 
+// const createTutorProfile = async (data: TutorProfileInput, userId: string) => {
+//   return await prisma.tutorProfile.upsert({
+//     where: { userId },
+//     update: {
+//       bio: data.bio,
+//       experience: data.experience,
+//       pricePerHour: data.pricePerHour,
+//       categories:
+//         data.categories && data.categories.length > 0
+//           ? {
+//               deleteMany: {}, 
+//               create: data.categories.map((name: string) => ({
+//                 category: {
+//                   connectOrCreate: {
+//                     where: { name },
+//                     create: { name },
+//                   },
+//                 },
+//               })),
+//             }
+//           : {},
+//     },
+//     create: {
+//       userId,
+//       bio: data.bio,
+//       experience: data.experience,
+//       pricePerHour: data.pricePerHour,
+//       categories:
+//         data.categories && data.categories.length > 0
+//           ? {
+//               create: data.categories.map((name: string) => ({
+//                 category: {
+//                   connectOrCreate: {
+//                     where: { name },
+//                     create: { name },
+//                   },
+//                 },
+//               })),
+//             }
+//           : {},
+//     },
+//   });
+// };
+
+
 const createTutorProfile = async (data: TutorProfileInput, userId: string) => {
-  return await prisma.tutorProfile.upsert({
+  return prisma.tutorProfile.upsert({
     where: { userId },
     update: {
       bio: data.bio,
       experience: data.experience,
       pricePerHour: data.pricePerHour,
-      categories:
-        data.categories && data.categories.length > 0
-          ? {
-              deleteMany: {}, 
-              create: data.categories.map((name: string) => ({
-                category: {
-                  connectOrCreate: {
-                    where: { name },
-                    create: { name },
-                  },
-                },
-              })),
-            }
-          : {},
+      categories: {
+        deleteMany: {},
+        create:
+          data.categories?.map((name) => ({
+            category: {
+              connectOrCreate: {
+                where: { name },
+                create: { name },
+              },
+            },
+          })) || [],
+      },
     },
     create: {
       userId,
       bio: data.bio,
       experience: data.experience,
       pricePerHour: data.pricePerHour,
-      categories:
-        data.categories && data.categories.length > 0
-          ? {
-              create: data.categories.map((name: string) => ({
-                category: {
-                  connectOrCreate: {
-                    where: { name },
-                    create: { name },
-                  },
-                },
-              })),
-            }
-          : {},
+      categories: {
+        create:
+          data.categories?.map((name) => ({
+            category: {
+              connectOrCreate: {
+                where: { name },
+                create: { name },
+              },
+            },
+          })) || [],
+      },
     },
   });
 };
+
 
 const getAllTutors = async () => {
   return await prisma.tutorProfile.findMany({
@@ -257,6 +299,8 @@ const getTopRatedTutor = async() => {
     }
   });
 };
+
+
 
 export const tutorServices = {
   createTutorProfile,
