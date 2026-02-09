@@ -5,4 +5,3 @@ build
 .vscode
 /generated/prisma
 .vercel
-api/
