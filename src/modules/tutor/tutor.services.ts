@@ -14,51 +14,6 @@ type TutorProfileInput = Omit<
   categories?: string[];
 };
 
-// const createTutorProfile = async (data: TutorProfileInput, userId: string) => {
-//   return await prisma.tutorProfile.upsert({
-//     where: { userId },
-//     update: {
-//       bio: data.bio,
-//       experience: data.experience,
-//       pricePerHour: data.pricePerHour,
-//       categories:
-//         data.categories && data.categories.length > 0
-//           ? {
-//               deleteMany: {}, 
-//               create: data.categories.map((name: string) => ({
-//                 category: {
-//                   connectOrCreate: {
-//                     where: { name },
-//                     create: { name },
-//                   },
-//                 },
-//               })),
-//             }
-//           : {},
-//     },
-//     create: {
-//       userId,
-//       bio: data.bio,
-//       experience: data.experience,
-//       pricePerHour: data.pricePerHour,
-//       categories:
-//         data.categories && data.categories.length > 0
-//           ? {
-//               create: data.categories.map((name: string) => ({
-//                 category: {
-//                   connectOrCreate: {
-//                     where: { name },
-//                     create: { name },
-//                   },
-//                 },
-//               })),
-//             }
-//           : {},
-//     },
-//   });
-// };
-
-
 const createTutorProfile = async (data: TutorProfileInput, userId: string) => {
   return prisma.tutorProfile.upsert({
     where: { userId },
@@ -98,7 +53,6 @@ const createTutorProfile = async (data: TutorProfileInput, userId: string) => {
     },
   });
 };
-
 
 const getAllTutors = async () => {
   return await prisma.tutorProfile.findMany({
@@ -193,6 +147,17 @@ const updateTutorProfile = async (userId: string, data: TutorProfileInput) => {
       bio: data.bio,
       experience: data.experience,
       pricePerHour: data.pricePerHour,
+      categories: {
+        create:
+          data.categories?.map((name: string) => ({
+            category: {
+              connectOrCreate: {
+                where: { name },
+                create: { name },
+              },
+            },
+          })) || [],
+      },
     },
   });
 };
@@ -221,14 +186,31 @@ export async function getTutorDashboardStats(userId: string) {
     include: {
       categories: { include: { category: true } },
       user: {
-        select: { id: true, name: true, email: true, phone: true, image: true },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          image: true,
+        },
       },
     },
   });
 
   if (!profile) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        image: true,
+      },
+    });
+
     return {
-      user: null,
+      user,
       profile: null,
       bookings: [],
       reviews: [],
@@ -238,6 +220,7 @@ export async function getTutorDashboardStats(userId: string) {
       upcomingSessions: 0,
     };
   }
+
   const bookings = await prisma.booking.findMany({
     where: { tutorId: profile.userId },
   });
@@ -248,7 +231,6 @@ export async function getTutorDashboardStats(userId: string) {
 
   const totalReviews = reviews.length;
 
-  // Calculate average rating correctly
   const averageRating =
     totalReviews === 0
       ? 0
@@ -258,7 +240,6 @@ export async function getTutorDashboardStats(userId: string) {
           ).toFixed(1),
         );
 
-  // Upcoming sessions
   const upcomingSessions = bookings.filter(
     (b) => new Date(b.date) > new Date(),
   ).length;
@@ -288,19 +269,17 @@ const getSingleTutorByUserId = async (userId: string) => {
   });
 };
 
-const getTopRatedTutor = async() => {
+const getTopRatedTutor = async () => {
   return await prisma.tutorProfile.findMany({
     orderBy: {
-      rating: "desc"
+      rating: "desc",
     },
     take: 6,
     include: {
-      user: true
-    }
+      user: true,
+    },
   });
 };
-
-
 
 export const tutorServices = {
   createTutorProfile,
@@ -310,5 +289,5 @@ export const tutorServices = {
   deleteTutorProfile,
   getTutorDashboardStats,
   getSingleTutorByUserId,
-  getTopRatedTutor
+  getTopRatedTutor,
 };

@@ -3,30 +3,6 @@ import { tutorServices } from "./tutor.services";
 import { prisma } from "../../lib/prisma";
 import { userRoles } from "../../middleware/auth";
 
-// const createTutorProfile = async (req: Request, res: Response) => {
-//   try {
-//     const user = req.user;
-//     if (!user) return res.status(401).json({ message: "Unauthorized user" });
-
-//     const result = await tutorServices.createTutorProfile(req.body, user.id);
-
-//     // Update user role to TUTOR
-//     await prisma.user.update({
-//       where: { id: user.id },
-//       data: { role: "TUTOR" },
-//     });
-
-//     res.status(201).json({ success: true, data: result });
-//   } catch (error: any) {
-//     return res.status(500).json({
-//       success: false,
-//       message: "Failed to create tutor profile",
-//       error: error.message,
-//     });
-//   }
-// };
-
-
 const createTutorProfile = async (req: Request, res: Response) => {
   try {
     const user = req.user;
@@ -64,7 +40,6 @@ const createTutorProfile = async (req: Request, res: Response) => {
     });
   }
 };
-
 
 const getAllTutors = async (req: Request, res: Response) => {
   try {
@@ -111,10 +86,14 @@ const updateTutorProfile = async (req: Request, res: Response) => {
     const user = req.user;
     if (!user) return res.status(401).json({ message: "Unauthorized" });
 
-    const result = await tutorServices.updateTutorProfile(user.id, req.body);
+    const data = req.body;
 
-    res.status(200).json({ success: true, data: result });
+    // Use the service function here
+    const updatedProfile = await tutorServices.updateTutorProfile(user.id, data);
+
+    return res.status(200).json({ success: true, data: updatedProfile });
   } catch (error: any) {
+    console.error("UpdateTutorProfile error:", error);
     return res.status(400).json({
       success: false,
       message: error.message || "Failed to update tutor profile",
@@ -140,31 +119,6 @@ const deleteTutorProfile = async (req: Request, res: Response) => {
     });
   }
 };
-
-// const deleteTutorProfile = async (req: Request, res: Response) => {
-//   try {
-//     const user = req.user!;
-    
-//     await tutorServices.deleteTutorProfile(user.id);
-
-//     // Downgrade role back to STUDENT
-//     await prisma.user.update({
-//       where: { id: user.id },
-//       data: { role: userRoles.STUDENT },
-//     });
-
-//     res.status(200).json({
-//       success: true,
-//       message: "Tutor profile deleted",
-//     });
-//   } catch (error: any) {
-//     res.status(400).json({
-//       success: false,
-//       message: error.message,
-//     });
-//   }
-// };
-
 
 const getTutorDashboardStats = async (req: Request, res: Response) => {
   try {

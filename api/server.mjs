@@ -272,39 +272,39 @@ var auth2 = (...roles) => async (req, res, next) => {
 
 // src/modules/tutor/tutor.services.ts
 var createTutorProfile = async (data, userId) => {
-  return await prisma.tutorProfile.upsert({
+  return prisma.tutorProfile.upsert({
     where: { userId },
     update: {
       bio: data.bio,
       experience: data.experience,
       pricePerHour: data.pricePerHour,
-      categories: data.categories && data.categories.length > 0 ? {
+      categories: {
         deleteMany: {},
-        create: data.categories.map((name) => ({
+        create: data.categories?.map((name) => ({
           category: {
             connectOrCreate: {
               where: { name },
               create: { name }
             }
           }
-        }))
-      } : {}
+        })) || []
+      }
     },
     create: {
       userId,
       bio: data.bio,
       experience: data.experience,
       pricePerHour: data.pricePerHour,
-      categories: data.categories && data.categories.length > 0 ? {
-        create: data.categories.map((name) => ({
+      categories: {
+        create: data.categories?.map((name) => ({
           category: {
             connectOrCreate: {
               where: { name },
               create: { name }
             }
           }
-        }))
-      } : {}
+        })) || []
+      }
     }
   });
 };
@@ -500,18 +500,31 @@ var tutorServices = {
 var createTutorProfile2 = async (req, res) => {
   try {
     const user = req.user;
-    if (!user) return res.status(401).json({ message: "Unauthorized user" });
-    const result = await tutorServices.createTutorProfile(req.body, user.id);
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    if (user.role === "TUTOR" /* TUTOR */) {
+      return res.status(400).json({
+        success: false,
+        message: "You are already a tutor"
+      });
+    }
+    const tutorProfile = await tutorServices.createTutorProfile(
+      req.body,
+      user.id
+    );
     await prisma.user.update({
       where: { id: user.id },
-      data: { role: "TUTOR" }
+      data: { role: "TUTOR" /* TUTOR */ }
     });
-    res.status(201).json({ success: true, data: result });
+    return res.status(201).json({
+      success: true,
+      data: tutorProfile
+    });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: "Failed to create tutor profile",
-      error: error.message
+      message: error.message
     });
   }
 };
