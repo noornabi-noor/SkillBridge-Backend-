@@ -18,6 +18,7 @@ app.use(express.json());
 
 app.use(cors({
   origin: "https://skillbridge-frontend-tan.vercel.app",
+  // origin: "http://localhost:3000",
   credentials: true,
 }));
 
