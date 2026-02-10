@@ -22,7 +22,7 @@ export const auth = betterAuth({
   trustedOrigins: [process.env.APP_URL!], 
 
   cookie: {
-    sameSite: "none",                      
+    sameSite: "Lax",                      
     secure: true,
     httpOnly: true,
     path: "/",
