@@ -36,15 +36,22 @@ app.use(express.json());
 //   credentials: true,
 // }));
 
-const allowedOrigins = [
-  process.env.APP_URL!,  // frontend URL
-  "http://localhost:3000",
-];
+// const allowedOrigins = [
+//   process.env.APP_URL!,  
+//   "http://localhost:3000",
+// ];
+
+// app.use(cors({
+//   origin: allowedOrigins,
+//   credentials: true,
+// }));
+
 
 app.use(cors({
-  origin: allowedOrigins,
+  origin: "https://skillbridge-frontend-tan.vercel.app",
   credentials: true,
 }));
+
 
 
 // better auth 
