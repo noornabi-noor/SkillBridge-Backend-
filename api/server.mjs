@@ -2399,8 +2399,16 @@ var authRouter = router10;
 // src/app.ts
 var app = express11();
 app.use(express11.json());
+var allowedOrigins = [
+  process.env.APP_URL,
+  "http://localhost:3000"
+];
 app.use(cors({
-  origin: process.env.APP_URL,
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error("CORS not allowed"));
+  },
   credentials: true
 }));
 app.all("/api/auth/*splat", toNodeHandler(auth));
