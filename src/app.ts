@@ -22,19 +22,30 @@ app.use(express.json());
 //     credentials: true,
 // }))
 
+// const allowedOrigins = [
+//     "https://skillbridge-frontend-tan.vercel.app",
+//   "http://localhost:3000",
+// ];
+
+// app.use(cors({
+//   origin: (origin, callback) => {
+//     if (!origin) return callback(null, true);
+//     if (allowedOrigins.includes(origin)) return callback(null, true);
+//     callback(new Error("CORS not allowed"));
+//   },
+//   credentials: true,
+// }));
+
 const allowedOrigins = [
-    "https://skillbridge-frontend-tan.vercel.app",
+  process.env.APP_URL!,  // frontend URL
   "http://localhost:3000",
 ];
 
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    callback(new Error("CORS not allowed"));
-  },
+  origin: allowedOrigins,
   credentials: true,
 }));
+
 
 // better auth 
 app.all("/api/auth/*splat", toNodeHandler(auth));
