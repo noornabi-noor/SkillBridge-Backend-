@@ -22,8 +22,11 @@ export const auth = betterAuth({
   trustedOrigins: [process.env.APP_URL!], 
 
   cookie: {
-    sameSite: "none",       
-    secure: process.env.NODE_ENV === "production", 
+    sameSite: "none",                      
+    secure: process.env.NODE_ENV === "production",
+    httpOnly: true,
+    path: "/",
+    maxAge: 60 * 60 * 24 * 7,              
   },
 
   emailAndPassword: {
