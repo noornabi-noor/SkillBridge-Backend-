@@ -23,7 +23,7 @@ app.use(express.json());
 // }))
 
 const allowedOrigins = [
-    process.env.APP_URL,
+    "https://skillbridge-frontend-tan.vercel.app",
   "http://localhost:3000",
 ];
 
