@@ -16,43 +16,10 @@ import { authRouter } from "./modules/auth/auth.router";
 const app = express();
 app.use(express.json());
 
-// app.use(cors({
-//     origin: process.env.APP_URL,
-//     // origin: "http://localhost:3000",
-//     credentials: true,
-// }))
-
-// const allowedOrigins = [
-//     "https://skillbridge-frontend-tan.vercel.app",
-//   "http://localhost:3000",
-// ];
-
-// app.use(cors({
-//   origin: (origin, callback) => {
-//     if (!origin) return callback(null, true);
-//     if (allowedOrigins.includes(origin)) return callback(null, true);
-//     callback(new Error("CORS not allowed"));
-//   },
-//   credentials: true,
-// }));
-
-// const allowedOrigins = [
-//   process.env.APP_URL!,  
-//   "http://localhost:3000",
-// ];
-
-// app.use(cors({
-//   origin: allowedOrigins,
-//   credentials: true,
-// }));
-
-
 app.use(cors({
   origin: "https://skillbridge-frontend-tan.vercel.app",
   credentials: true,
 }));
-
-
 
 // better auth 
 app.all("/api/auth/*splat", toNodeHandler(auth));
