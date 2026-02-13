@@ -87,6 +87,14 @@ var auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL,
   database: prismaAdapter(prisma, { provider: "postgresql" }),
   trustedOrigins: [process.env.APP_URL],
+  cookie: {
+    sameSite: "none",
+    secure: true,
+    // secure: process.env.NODE_ENV === "production",
+    httpOnly: true,
+    path: "/",
+    maxAge: 60 * 60 * 24 * 7
+  },
   emailAndPassword: {
     enabled: true,
     autoSignIn: false,
@@ -2400,17 +2408,27 @@ var authRouter = router10;
 var app = express11();
 app.use(express11.json());
 var allowedOrigins = [
-  process.env.APP_URL,
-  "http://localhost:3000"
-];
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    callback(new Error("CORS not allowed"));
-  },
-  credentials: true
-}));
+  process.env.APP_URL || "http://localhost:3000",
+  process.env.PROD_APP_URL
+  // Production frontend URL
+].filter(Boolean);
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const isAllowed = allowedOrigins.includes(origin) || /^https:\/\/next-blog-client.*\.vercel\.app$/.test(origin) || /^https:\/\/.*\.vercel\.app$/.test(origin);
+      if (isAllowed) {
+        callback(null, true);
+      } else {
+        callback(new Error(`Origin ${origin} not allowed by CORS`));
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
+    exposedHeaders: ["Set-Cookie"]
+  })
+);
 app.all("/api/auth/*splat", toNodeHandler(auth));
 app.use("/api/tutors", tutorRouter);
 app.use("/api/categories", categoryRouter);
@@ -2427,18 +2445,8 @@ app.get("", (req, res) => {
 });
 var app_default = app;
 
-// src/server.ts
-var port = process.env.PORT || 5e3;
-async function main() {
-  try {
-    await prisma.$connect();
-    console.log("Connected to the database successfully!");
-    app_default.listen(port, () => {
-    });
-  } catch (error) {
-    console.error("An error occured", error);
-    await prisma.$disconnect();
-    process.exit(1);
-  }
-}
-main();
+// src/index.ts
+var index_default = app_default;
+export {
+  index_default as default
+};

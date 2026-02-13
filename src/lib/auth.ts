@@ -21,14 +21,27 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "postgresql" }),
   trustedOrigins: [process.env.APP_URL!], 
 
-  cookie: {
-    sameSite: "none",                      
-    secure: true,
-    // secure: process.env.NODE_ENV === "production",
-    httpOnly: true,
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7,              
+
+  session: {
+    cookieCache: {
+      secure: true,
+      enabled: true,
+      maxAge: 5 * 60, // 5 minutes
+      sameSite: "lax",
+      httpOnly: true,
+      path: "/",
+    },
   },
+  advanced: {
+    cookiePrefix: "better-auth",
+    useSecureCookies: process.env.NODE_ENV === "production",
+    crossSubDomainCookies: {
+      enabled: false,
+    },
+    disableCSRFCheck: true, // Allow requests without Origin header (Postman, mobile apps, etc.)
+  },
+
+
 
   emailAndPassword: {
     enabled: true,
