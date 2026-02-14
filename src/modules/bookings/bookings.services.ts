@@ -73,7 +73,6 @@ const createBooking = async (
   });
 };
 
-
 const getAllBookings = async () => {
   return prisma.booking.findMany({
     include: {
@@ -145,6 +144,7 @@ const updateBooking = async (
   });
 };
 
+
 const deleteBooking = async (bookingId: string) => {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
@@ -186,7 +186,7 @@ const getUpcomingBookingsByTutor = async (
       status: { in: ["CONFIRMED", "PENDING"] },
     },
     include: { student: { select: { id: true, name: true } } },
-    orderBy: [{ date: "asc" }, { startTime: "asc" }],
+    orderBy: [{ date: "asc" }, { startTime: "asc" }]
   });
 };
 
