@@ -27,6 +27,7 @@ export const auth = betterAuth({
   trustedOrigins: [
   "https://skillbridge-frontend-liard.vercel.app",
   "https://skill-bridge-mocha.vercel.app",
+  "https://skillbridge-0r8a.onrender.com"
 ],
 
 
