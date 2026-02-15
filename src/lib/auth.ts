@@ -19,29 +19,60 @@ const transporter = nodemailer.createTransport({
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL, 
   database: prismaAdapter(prisma, { provider: "postgresql" }),
-  trustedOrigins: [process.env.APP_URL!], 
+  trustedOrigins: [process.env.APP_URL!,
+    process.env.BETTER_AUTH_URL!,
+  "http://localhost:3000",
+  ], 
 
 
-  session: {
-    cookieCache: {
-      secure: true,
-      enabled: true,
-      maxAge: 5 * 60, // 5 minutes
-      sameSite: "lax",
-      httpOnly: true,
-      path: "/",
-    },
-  },
+  // session: {
+  //   cookieCache: {
+  //     secure: true,
+  //     enabled: true,
+  //     maxAge: 5 * 60, // 5 minutes
+  //     // sameSite: "none",
+  //     sameSite: "lax",
+  //     httpOnly: true,
+  //     path: "/",
+  //   },
+  // },
+  // advanced: {
+  //   cookiePrefix: "better-auth",
+  //   // useSecureCookies: process.env.NODE_ENV === "production",
+  //   useSecureCookies: true,
+  //   crossSubDomainCookies: {
+  //     enabled: false,
+  //   },
+  //   disableCSRFCheck: true, // Allow requests without Origin header (Postman, mobile apps, etc.)
+  // },
+
+
+  // advanced: {
+  //   useSecureCookies: true,
+  //   defaultCookieAttributes: {
+  //     sameSite: "none",
+  //     secure: true,
+  //   },
+  //   // ADD THIS SECTION: Specifically target the 'state' cookie
+  //   cookies: {
+  //     state: {
+  //       attributes: {
+  //         sameSite: "none",
+  //         secure: true,
+  //       },
+  //     },
+  //   },
+  // },
+
+
   advanced: {
-    cookiePrefix: "better-auth",
-    useSecureCookies: process.env.NODE_ENV === "production",
-    crossSubDomainCookies: {
-      enabled: false,
+    defaultCookieAttributes: {
+      sameSite: "lax",
+      secure: true, 
+      httpOnly: true,
+      // partitioned: true,
     },
-    disableCSRFCheck: true, // Allow requests without Origin header (Postman, mobile apps, etc.)
   },
-
-
 
   emailAndPassword: {
     enabled: true,
@@ -165,5 +196,6 @@ export const auth = betterAuth({
     },
   },
 
-  redirectTo: process.env.APP_URL, 
+  // redirectTo: process.env.APP_URL, 
+  // redirectTo: "https://skillbridge-frontend-liard.vercel.app/dashboard",
 });

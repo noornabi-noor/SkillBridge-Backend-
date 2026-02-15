@@ -57,7 +57,7 @@ const getAllTutors = async (req: Request, res: Response) => {
   }
 };
 
-const getSingleUser = async (req: Request, res: Response) => {
+const getSingleTutor = async (req: Request, res: Response) => {
   try {
     const { id: userId } = req.params;
     const result = await tutorServices.getSingleTutor(userId as string);
@@ -157,7 +157,7 @@ const getTopRatedTutor = async(req: Request, res: Response) => {
 export const tutorController = {
   createTutorProfile,
   getAllTutors,
-  getSingleUser,
+  getSingleTutor,
   updateTutorProfile,
   deleteTutorProfile,
   getTutorDashboardStats,
