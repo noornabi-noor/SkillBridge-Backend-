@@ -86,15 +86,73 @@ var transporter = nodemailer.createTransport({
 var auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL,
   database: prismaAdapter(prisma, { provider: "postgresql" }),
-  trustedOrigins: [process.env.APP_URL],
-  cookie: {
-    sameSite: "none",
-    secure: true,
-    // secure: process.env.NODE_ENV === "production",
-    httpOnly: true,
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7
+  // trustedOrigins: [process.env.APP_URL!,
+  //   process.env.BETTER_AUTH_URL!,
+  // "http://localhost:3000",
+  // ], 
+  trustedOrigins: [
+    "https://skillbridge-frontend-liard.vercel.app",
+    "https://skill-bridge-mocha.vercel.app"
+  ],
+  // session: {
+  //   cookieCache: {
+  //     secure: true,
+  //     enabled: true,
+  //     maxAge: 5 * 60, // 5 minutes
+  //     // sameSite: "lax",
+  //     sameSite: "none",
+  //     httpOnly: true,
+  //     path: "/",
+  //   },
+  // },
+  // advanced: {
+  //   cookiePrefix: "better-auth",
+  //   useSecureCookies: process.env.NODE_ENV === "production",
+  //   // useSecureCookies: true,
+  //   crossSubDomainCookies: {
+  //     enabled: false,
+  //   },
+  //   // disableCSRFCheck: true, 
+  // },
+  session: {
+    cookieCache: {
+      secure: true,
+      enabled: true,
+      maxAge: 5 * 60,
+      sameSite: "none",
+      httpOnly: true,
+      path: "/"
+    }
   },
+  advanced: {
+    useSecureCookies: true,
+    cookiePrefix: "__Secure-better-auth"
+    // IMPORTANT
+  },
+  // advanced: {
+  //   useSecureCookies: true,
+  //   defaultCookieAttributes: {
+  //     sameSite: "none",
+  //     secure: true,
+  //   },
+  //   // ADD THIS SECTION: Specifically target the 'state' cookie
+  //   cookies: {
+  //     state: {
+  //       attributes: {
+  //         sameSite: "none",
+  //         secure: true,
+  //       },
+  //     },
+  //   },
+  // },
+  // advanced: {
+  //   defaultCookieAttributes: {
+  //     sameSite: "lax",
+  //     secure: true, 
+  //     httpOnly: true,
+  //     // partitioned: true,
+  //   },
+  // },
   emailAndPassword: {
     enabled: true,
     autoSignIn: false,
@@ -212,8 +270,9 @@ var auth = betterAuth({
       accessType: "offline",
       prompt: "select_account consent"
     }
-  },
-  redirectTo: process.env.APP_URL
+  }
+  // redirectTo: process.env.APP_URL, 
+  // redirectTo: process.env.BETTER_AUTH_URL,
 });
 
 // src/modules/tutor/tutor.routes.ts
@@ -576,7 +635,7 @@ var getAllTutors2 = async (req, res) => {
     });
   }
 };
-var getSingleUser = async (req, res) => {
+var getSingleTutor2 = async (req, res) => {
   try {
     const { id: userId } = req.params;
     const result = await tutorServices.getSingleTutor(userId);
@@ -659,7 +718,7 @@ var getTopRatedTutor2 = async (req, res) => {
 var tutorController = {
   createTutorProfile: createTutorProfile2,
   getAllTutors: getAllTutors2,
-  getSingleUser,
+  getSingleTutor: getSingleTutor2,
   updateTutorProfile: updateTutorProfile2,
   deleteTutorProfile: deleteTutorProfile2,
   getTutorDashboardStats: getTutorDashboardStats2,
@@ -673,7 +732,7 @@ router.get("/top-tutor", tutorController.getTopRatedTutor);
 router.get("/by-user/:userId", tutorController.getTutorByUserId);
 router.get("/dashboard/:id", auth2("TUTOR" /* TUTOR */), tutorController.getTutorDashboardStats);
 router.get("/", tutorController.getAllTutors);
-router.get("/:id", tutorController.getSingleUser);
+router.get("/:id", tutorController.getSingleTutor);
 router.post("/", auth2(), tutorController.createTutorProfile);
 router.patch("/", auth2("TUTOR" /* TUTOR */), tutorController.updateTutorProfile);
 router.delete("/:id", auth2("TUTOR" /* TUTOR */, "ADMIN" /* ADMIN */), tutorController.deleteTutorProfile);
@@ -2445,8 +2504,18 @@ app.get("", (req, res) => {
 });
 var app_default = app;
 
-// src/index.ts
-var index_default = app_default;
-export {
-  index_default as default
-};
+// src/server.ts
+var port = process.env.PORT || 5e3;
+async function main() {
+  try {
+    await prisma.$connect();
+    console.log("Connected to the database successfully!");
+    app_default.listen(port, () => {
+    });
+  } catch (error) {
+    console.error("An error occured", error);
+    await prisma.$disconnect();
+    process.exit(1);
+  }
+}
+main();
