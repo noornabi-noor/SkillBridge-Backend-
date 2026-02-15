@@ -58,7 +58,7 @@ export const auth = betterAuth({
     secure: true,
     enabled: true,
     maxAge: 5 * 60,
-    sameSite: "none",
+    sameSite: "lax",
     httpOnly: true,
     path: "/",
   },
