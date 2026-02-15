@@ -19,10 +19,15 @@ const transporter = nodemailer.createTransport({
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL, 
   database: prismaAdapter(prisma, { provider: "postgresql" }),
-  trustedOrigins: [process.env.APP_URL!,
-    process.env.BETTER_AUTH_URL!,
-  "http://localhost:3000",
-  ], 
+  // trustedOrigins: [process.env.APP_URL!,
+  //   process.env.BETTER_AUTH_URL!,
+  // "http://localhost:3000",
+  // ], 
+
+  trustedOrigins: [
+  "https://skillbridge-frontend-liard.vercel.app",
+  "https://skill-bridge-mocha.vercel.app",
+],
 
 
   // session: {
@@ -30,21 +35,38 @@ export const auth = betterAuth({
   //     secure: true,
   //     enabled: true,
   //     maxAge: 5 * 60, // 5 minutes
-  //     // sameSite: "none",
-  //     sameSite: "lax",
+  //     // sameSite: "lax",
+  //     sameSite: "none",
   //     httpOnly: true,
   //     path: "/",
   //   },
   // },
   // advanced: {
   //   cookiePrefix: "better-auth",
-  //   // useSecureCookies: process.env.NODE_ENV === "production",
-  //   useSecureCookies: true,
+  //   useSecureCookies: process.env.NODE_ENV === "production",
+  //   // useSecureCookies: true,
   //   crossSubDomainCookies: {
   //     enabled: false,
   //   },
-  //   disableCSRFCheck: true, // Allow requests without Origin header (Postman, mobile apps, etc.)
+  //   // disableCSRFCheck: true, 
   // },
+
+
+  session: {
+  cookieCache: {
+    secure: true,
+    enabled: true,
+    maxAge: 5 * 60,
+    sameSite: "none",
+    httpOnly: true,
+    path: "/",
+  },
+},
+advanced: {
+  useSecureCookies: true,
+  cookiePrefix: "__Secure-better-auth",  // IMPORTANT
+},
+
 
 
   // advanced: {
@@ -65,14 +87,14 @@ export const auth = betterAuth({
   // },
 
 
-  advanced: {
-    defaultCookieAttributes: {
-      sameSite: "lax",
-      secure: true, 
-      httpOnly: true,
-      // partitioned: true,
-    },
-  },
+  // advanced: {
+  //   defaultCookieAttributes: {
+  //     sameSite: "lax",
+  //     secure: true, 
+  //     httpOnly: true,
+  //     // partitioned: true,
+  //   },
+  // },
 
   emailAndPassword: {
     enabled: true,
@@ -197,5 +219,5 @@ export const auth = betterAuth({
   },
 
   // redirectTo: process.env.APP_URL, 
-  // redirectTo: "https://skillbridge-frontend-liard.vercel.app/dashboard",
+  // redirectTo: process.env.BETTER_AUTH_URL,
 });
