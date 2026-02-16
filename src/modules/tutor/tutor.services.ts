@@ -122,36 +122,6 @@ const getSingleTutor = async (id: string) => {
   });
 };
 
-
-// const getSingleTutor = async (id: string) => {
-//   const tutor = await prisma.tutorProfile.findFirst({
-//     where: { id },
-//     include: {
-//       user: { select: { id: true, name: true, email: true, image: true, phone: true } },
-//       categories: { include: { category: true } },
-//       availability: { where: { isBooked: false }, orderBy: { dayOfWeek: "asc" } },
-//       reviews: { include: { student: { select: { id: true, name: true, image: true } } } },
-//     },
-//   });
-
-//   if (!tutor) return null;
-
-//   // Calculate average rating
-//   const rating =
-//     tutor.reviews && tutor.reviews.length > 0
-//       ? tutor.reviews.reduce((sum, r: any) => sum + (r.rating || 0), 0) / tutor.reviews.length
-//       : null;
-
-//   return {
-//     ...tutor,
-//     rating,
-//     categories: tutor.categories || [],
-//     availability: tutor.availability || [],
-//     reviews: tutor.reviews || [],
-//   };
-// };
-
-
 const updateTutorProfile = async (userId: string, data: TutorProfileInput) => {
   return prisma.tutorProfile.upsert({
     where: { userId },

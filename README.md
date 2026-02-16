@@ -86,6 +86,18 @@ The backend follows a **backend-first architecture**, exposing secure APIs consu
 
 ---
 
+## 🗂️ Database Schema
+
+Here is the ER diagram for the SkillBridge:
+
+![Database Schema](https://i.ibb.co.com/PGHvJC8Q/skillbridge.png)
+
+The full ER diagram for the SkillBridge can be viewed online at DrawSQL:
+
+[View Database Schema on DrawSQL](https://drawsql.app/teams/myself-668/diagrams/skillbridge)
+
+---
+
 ## 📂 Project Structure
 
 ```text

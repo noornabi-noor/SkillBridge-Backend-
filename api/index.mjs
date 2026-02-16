@@ -86,49 +86,50 @@ var transporter = nodemailer.createTransport({
 var auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL,
   database: prismaAdapter(prisma, { provider: "postgresql" }),
-  // trustedOrigins: [process.env.APP_URL!,
-  //   process.env.BETTER_AUTH_URL!,
-  // "http://localhost:3000",
-  // ], 
   trustedOrigins: [
-    "https://skillbridge-frontend-liard.vercel.app",
-    "https://skill-bridge-mocha.vercel.app"
+    process.env.APP_URL,
+    "http://localhost:3000"
   ],
-  // session: {
-  //   cookieCache: {
-  //     secure: true,
-  //     enabled: true,
-  //     maxAge: 5 * 60, // 5 minutes
-  //     // sameSite: "lax",
-  //     sameSite: "none",
-  //     httpOnly: true,
-  //     path: "/",
-  //   },
-  // },
-  // advanced: {
-  //   cookiePrefix: "better-auth",
-  //   useSecureCookies: process.env.NODE_ENV === "production",
-  //   // useSecureCookies: true,
-  //   crossSubDomainCookies: {
-  //     enabled: false,
-  //   },
-  //   // disableCSRFCheck: true, 
-  // },
+  // trustedOrigins: [
+  //   "https://skillbridge-frontend-liard.vercel.app",
+  //   "https://skill-bridge-mocha.vercel.app",
+  //   "https://skillbridge-0r8a.onrender.com",
+  // ],
   session: {
     cookieCache: {
       secure: true,
       enabled: true,
       maxAge: 5 * 60,
+      // 5 minutes
+      // sameSite: "lax",
       sameSite: "none",
       httpOnly: true,
       path: "/"
     }
   },
   advanced: {
-    useSecureCookies: true,
-    cookiePrefix: "__Secure-better-auth"
-    // IMPORTANT
+    cookiePrefix: "better-auth",
+    useSecureCookies: process.env.NODE_ENV === "production",
+    // useSecureCookies: true,
+    crossSubDomainCookies: {
+      enabled: false
+    }
+    // disableCSRFCheck: true,
   },
+  // session: {
+  //   cookieCache: {
+  //     secure: true,
+  //     enabled: true,
+  //     maxAge: 5 * 60,
+  //     sameSite: "lax",
+  //     httpOnly: true,
+  //     path: "/",
+  //   },
+  // },
+  // advanced: {
+  //   useSecureCookies: true,
+  //   cookiePrefix: "__Secure-better-auth",
+  // },
   // advanced: {
   //   useSecureCookies: true,
   //   defaultCookieAttributes: {
@@ -148,7 +149,7 @@ var auth = betterAuth({
   // advanced: {
   //   defaultCookieAttributes: {
   //     sameSite: "lax",
-  //     secure: true, 
+  //     secure: true,
   //     httpOnly: true,
   //     // partitioned: true,
   //   },
@@ -270,8 +271,8 @@ var auth = betterAuth({
       accessType: "offline",
       prompt: "select_account consent"
     }
-  }
-  // redirectTo: process.env.APP_URL, 
+  },
+  redirectTo: process.env.APP_URL
   // redirectTo: process.env.BETTER_AUTH_URL,
 });
 
@@ -2504,18 +2505,8 @@ app.get("", (req, res) => {
 });
 var app_default = app;
 
-// src/server.ts
-var port = process.env.PORT || 5e3;
-async function main() {
-  try {
-    await prisma.$connect();
-    console.log("Connected to the database successfully!");
-    app_default.listen(port, () => {
-    });
-  } catch (error) {
-    console.error("An error occured", error);
-    await prisma.$disconnect();
-    process.exit(1);
-  }
-}
-main();
+// src/index.ts
+var index_default = app_default;
+export {
+  index_default as default
+};
