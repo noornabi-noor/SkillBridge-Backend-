@@ -4,12 +4,11 @@ import { prisma } from "../../lib/prisma";
 const createCategories = async (
   data: Omit<Category, "id" | "createdAt" | "updatedAt" | "tutors">,
 ) => {
-
   const existing = await prisma.category.findFirst({
     where: {
       name: {
         equals: data.name,
-        mode: "insensitive", 
+        mode: "insensitive",
       },
     },
   });
@@ -33,46 +32,27 @@ const getAllCategory = async () => {
       name: true,
       createdAt: true,
       updatedAt: true,
-      // tutors: {
-      //   select: {
-      //     tutor: {
-      //       select: {
-      //         id: true,
-      //         userId: true,
-      //         bio: true,
-      //         pricePerHour: true,
-      //         experience: true,
-      //         rating: true,
-      //       },
-      //     },
-      //   },
-      // },
-
-
       tutors: {
-  select: {
-    tutor: {
-      select: {
-        id: true,
-        userId: true,
-        bio: true,
-        pricePerHour: true,
-        experience: true,
-        rating: true,
-        user: {
-          select: {
-            name: true,
-            image: true,
-            email: true, // optional if needed
+        select: {
+          tutor: {
+            select: {
+              id: true,
+              userId: true,
+              bio: true,
+              pricePerHour: true,
+              experience: true,
+              rating: true,
+              user: {
+                select: {
+                  name: true,
+                  image: true,
+                  email: true, // optional if needed
+                },
+              },
+            },
           },
         },
       },
-    },
-  },
-},
-
-
-
     },
   });
 };
