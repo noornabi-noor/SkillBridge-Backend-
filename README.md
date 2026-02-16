@@ -86,6 +86,20 @@ The backend follows a **backend-first architecture**, exposing secure APIs consu
 
 ---
 
+## 🗄️ Database Schema (Core Tables)
+
+- **User**
+- **TutorProfile**
+- **Category**
+- **Booking**
+- **Review**
+- **Availability**
+- **TutorCategory**
+
+> Managed using **Prisma ORM** with **PostgreSQL**.
+
+---
+
 ## 🗂️ Database Schema
 
 Here is the ER diagram for the SkillBridge:
@@ -280,20 +294,6 @@ Each module follows a strict **routes → controller → services** pattern.
 | GET | `/api/auth` | Get current user |
 | POST | `/api/auth/sign-out` | Sign out |
 | GET | `/api/auth/tutor-only` | Tutor-only test route |
-
----
-
-## 🗄️ Database Schema (Core Tables)
-
-- **User**
-- **TutorProfile**
-- **Category**
-- **Booking**
-- **Review**
-- **Availability**
-- **TutorCategory**
-
-> Managed using **Prisma ORM** with **PostgreSQL**.
 
 ---
 
