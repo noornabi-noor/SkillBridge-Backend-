@@ -1,158 +1,132 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { tutorServices } from "./tutor.services";
 import { prisma } from "../../lib/prisma";
 import { userRoles } from "../../middleware/auth";
 
-const createTutorProfile = async (req: Request, res: Response) => {
+const createTutorProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = req.user;
     if (!user) {
-      return res.status(401).json({ message: "Unauthorized" });
+      const err = new Error("Unauthorized");
+      err.name = "UnauthorizedError";
+      throw err;
     }
 
-    // Prevent re-becoming tutor
     if (user.role === userRoles.TUTOR) {
-      return res.status(400).json({
-        success: false,
-        message: "You are already a tutor",
-      });
+      const err = new Error("You are already a tutor");
+      err.name = "ConflictError";
+      throw err;
     }
 
-    const tutorProfile = await tutorServices.createTutorProfile(
-      req.body,
-      user.id
-    );
+    const tutorProfile = await tutorServices.createTutorProfile(req.body, user.id);
 
-    // Promote role
     await prisma.user.update({
       where: { id: user.id },
       data: { role: userRoles.TUTOR },
     });
 
-    return res.status(201).json({
+    res.status(201).json({
       success: true,
       data: tutorProfile,
     });
-  } catch (error: any) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+  } catch (error) {
+    next(error);
   }
 };
 
-const getAllTutors = async (req: Request, res: Response) => {
+const getAllTutors = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await tutorServices.getAllTutors();
-
-    res.status(200).json({
-      success: true,
-      data: result,
-    });
+    res.status(200).json({ success: true, data: result });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch staff",
-    });
+    next(error);
   }
 };
 
-const getSingleTutor = async (req: Request, res: Response) => {
+const getSingleTutor = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id: userId } = req.params;
     const result = await tutorServices.getSingleTutor(userId as string);
 
     if (!result) {
-      return res.status(404).json({
-        success: false,
-        message: "Tutor not found",
-      });
+      const err = new Error("Tutor not found");
+      err.name = "NotFoundError";
+      throw err;
     }
 
-    return res.status(200).json({
-      success: true,
-      data: result,
-    });
+    res.status(200).json({ success: true, data: result });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch tutor",
-    });
+    next(error);
   }
 };
 
-const updateTutorProfile = async (req: Request, res: Response) => {
+const updateTutorProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = req.user;
-    if (!user) return res.status(401).json({ message: "Unauthorized" });
+    if (!user) {
+      const err = new Error("Unauthorized");
+      err.name = "UnauthorizedError";
+      throw err;
+    }
 
-    const data = req.body;
+    const updatedProfile = await tutorServices.updateTutorProfile(user.id, req.body);
 
-    // Use the service function here
-    const updatedProfile = await tutorServices.updateTutorProfile(user.id, data);
-
-    return res.status(200).json({ success: true, data: updatedProfile });
-  } catch (error: any) {
-    console.error("UpdateTutorProfile error:", error);
-    return res.status(400).json({
-      success: false,
-      message: error.message || "Failed to update tutor profile",
-    });
+    res.status(200).json({ success: true, data: updatedProfile });
+  } catch (error) {
+    next(error);
   }
 };
 
-const deleteTutorProfile = async (req: Request, res: Response) => {
+const deleteTutorProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-
     const result = await tutorServices.deleteTutorProfile(id as string);
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       message: "Tutor profile deleted successfully",
       data: result,
     });
-  } catch (error: any) {
-    return res.status(400).json({
-      success: false,
-      message: error.message || "Failed to delete tutor profile",
-    });
+  } catch (error) {
+    next(error);
   }
 };
 
-const getTutorDashboardStats = async (req: Request, res: Response) => {
+const getTutorDashboardStats = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     const stats = await tutorServices.getTutorDashboardStats(id as string);
-
-    return res.status(200).json({ success: true, data: stats });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+    res.status(200).json({ success: true, data: stats });
+  } catch (error) {
+    next(error);
   }
 };
 
-const getTutorByUserId = async (req: Request, res: Response) => {
+const getTutorByUserId = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { userId } = req.params;
     const tutor = await tutorServices.getSingleTutorByUserId(userId as string);
-    if (!tutor)
-      return res
-        .status(404)
-        .json({ success: false, message: "Tutor not found" });
+
+    if (!tutor) {
+      const err = new Error("Tutor not found");
+      err.name = "NotFoundError";
+      throw err;
+    }
+
     res.status(200).json({ success: true, data: tutor });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    next(error);
   }
 };
 
-const getTopRatedTutor = async(req: Request, res: Response) => {
+const getTopRatedTutor = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await tutorServices.getTopRatedTutor();
     res.status(200).json({ success: true, data: result });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    next(error);
   }
-}
+};
 
 export const tutorController = {
   createTutorProfile,
@@ -162,5 +136,5 @@ export const tutorController = {
   deleteTutorProfile,
   getTutorDashboardStats,
   getTutorByUserId,
-  getTopRatedTutor
+  getTopRatedTutor,
 };

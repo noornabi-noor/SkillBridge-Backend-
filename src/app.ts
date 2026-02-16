@@ -12,6 +12,8 @@ import { adminRouter } from "./modules/admin/admin.routes";
 import { adminAnalyticsRouter } from "./modules/adminAnalytic/adminAnalytic.routes";
 import { usersRouter } from "./modules/users/user.routes";
 import { authRouter } from "./modules/auth/auth.router";
+import errorHandler from "./middleware/globalErrorHandler";
+import { notFound } from "./middleware/notFound";
 
 const app = express();
 app.use(express.json());
@@ -67,6 +69,11 @@ app.use("/api/adminAnalytic", adminAnalyticsRouter);
 app.use("/api/users", usersRouter);
 
 app.use("/api/me", authRouter);
+
+// global error handler
+app.use(errorHandler);
+// not found
+app.use(notFound);
 
 app.get("", (req : Request, res: Response)=>{
     res.send("Hello world!");

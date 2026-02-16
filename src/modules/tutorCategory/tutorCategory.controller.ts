@@ -1,8 +1,11 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { tutorCategoryServices } from "./tutorCategory.services";
 
-
-const createTutorCategory = async (req: Request, res: Response) => {
+const createTutorCategory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const result = await tutorCategoryServices.addTutorToCategory(req.body);
 
@@ -10,15 +13,16 @@ const createTutorCategory = async (req: Request, res: Response) => {
       success: true,
       data: result,
     });
-  } catch (error: any) {
-    res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+  } catch (error) {
+    next(error);
   }
 };
 
-const getTutorCategories = async (req: Request, res: Response) => {
+const getTutorCategories = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { tutorId, categoryId } = req.query;
 
@@ -31,29 +35,29 @@ const getTutorCategories = async (req: Request, res: Response) => {
       success: true,
       data: result,
     });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+  } catch (error) {
+    next(error);
   }
 };
 
-const deleteTutorCategory = async (req: Request, res: Response) => {
+const deleteTutorCategory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { id } = req.params;
 
-    const result = await tutorCategoryServices.removeTutorFromCategory(id as string);
+    const result = await tutorCategoryServices.removeTutorFromCategory(
+      id as string
+    );
 
     res.status(200).json({
       success: true,
       data: result,
     });
-  } catch (error: any) {
-    res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+  } catch (error) {
+    next(error);
   }
 };
 

@@ -1,8 +1,7 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { adminAnalyticsServices } from "./adminAnalytic.services";
 
-
-const getDashboardData = async (req: Request, res: Response) => {
+const getDashboardData = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await adminAnalyticsServices.getDashboardData();
 
@@ -10,15 +9,12 @@ const getDashboardData = async (req: Request, res: Response) => {
       success: true,
       data: result,
     });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+  } catch (error) {
+    next(error);
   }
 };
 
-const getStats = async (req: Request, res: Response) => {
+const getStats = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await adminAnalyticsServices.getStats();
 
@@ -26,11 +22,8 @@ const getStats = async (req: Request, res: Response) => {
       success: true,
       data: result,
     });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+  } catch (error) {
+    next(error);
   }
 };
 
