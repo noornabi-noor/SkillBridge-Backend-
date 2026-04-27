@@ -177,9 +177,30 @@ const verifyPayment = async (sessionId: string, bookingId: string) => {
   }
 };
 
+const getAllPayments = async () => {
+  return await prisma.payment.findMany({
+    include: {
+      booking: {
+        include: {
+          student: true,
+          tutor: {
+            include: {
+              user: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+};
+
 export const paymentServices = {
   createCheckoutSession,
   handleWebhook,
   verifyPayment,
+  getAllPayments,
 };
 

@@ -1,3 +1,5 @@
+import "dotenv/config";
+import { auth } from "../lib/auth";
 import { prisma } from "../lib/prisma";
 import { userRoles } from "../middleware/auth";
 
@@ -9,51 +11,49 @@ async function seedAdmin() {
       password: process.env.ADMIN_PASSWORD as string,
     };
 
+    if (!adminData.email || !adminData.password || !adminData.name) {
+      console.error("Missing ADMIN_NAME, ADMIN_EMAIL, or ADMIN_PASSWORD in environment variables");
+      return;
+    }
+
     const existingUser = await prisma.user.findUnique({
       where: { email: adminData.email },
     });
 
     if (existingUser) {
-      console.log("Admin already exists!");
+      console.log("Admin user already exists in database.");
+      
+      // Still promote to ADMIN if it exists but might have wrong role
+      await prisma.user.update({
+        where: { email: adminData.email },
+        data: {
+          role: userRoles.ADMIN,
+          emailVerified: true,
+        },
+      });
+      console.log("Admin promoted successfully (in case it existed but was not admin)!");
       return;
     }
 
-    // Sign up via auth API
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
+    console.log(`Creating admin account for ${adminData.email}...`);
 
-    // Only add Origin if APP_URL is defined
-    if (process.env.APP_URL) {
-      headers["Origin"] = process.env.APP_URL;
-    }
-
-    const response = await fetch(
-      `${process.env.BETTER_AUTH_URL}/api/auth/sign-up/email`,
-      {
-        method: "POST",
-        headers,
-        body: JSON.stringify(adminData),
+    // Use internal API to create user (handles password hashing)
+    const result = await auth.api.signUpEmail({
+      body: {
+        email: adminData.email,
+        password: adminData.password,
+        name: adminData.name,
       },
-    );
+    });
 
-    const text = await response.text();
-    let result: any;
-    try {
-      result = JSON.parse(text);
-    } catch {
-      console.error("Response was not JSON:", text);
-      return;
-    }
-
-    console.log("Sign-up result:", result);
-
-    if (!response.ok) {
+    if (!result) {
       console.error("Failed to create admin via auth API");
       return;
     }
 
-    // Promote user to ADMIN
+    console.log("Admin created successfully:", result.user.email);
+
+    // Promote user to ADMIN and verify email
     await prisma.user.update({
       where: { email: adminData.email },
       data: {
@@ -65,7 +65,7 @@ async function seedAdmin() {
     console.log("Admin promoted successfully!");
   } catch (error) {
     console.error("Error seeding admin:", error);
-    process.exit(1); // optional: exit script on error
+    process.exit(1);
   }
 }
 

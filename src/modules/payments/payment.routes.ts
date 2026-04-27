@@ -7,5 +7,6 @@ const router = express.Router();
 router.post("/create-checkout-session", auth(userRoles.STUDENT), paymentController.createCheckoutSession);
 router.post("/webhook", paymentController.handleWebhook);
 router.post("/verify", auth(userRoles.STUDENT), paymentController.verifyPayment);
+router.get("/", auth(userRoles.ADMIN), paymentController.getAllPayments);
 
 export const paymentRouter = router;

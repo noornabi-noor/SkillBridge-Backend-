@@ -39,8 +39,21 @@ const verifyPayment = async (req: Request, res: Response) => {
   }
 };
 
+const getAllPayments = async (req: Request, res: Response) => {
+  try {
+    const result = await paymentServices.getAllPayments();
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
 export const paymentController = {
   createCheckoutSession,
   handleWebhook,
   verifyPayment,
+  getAllPayments,
 };
