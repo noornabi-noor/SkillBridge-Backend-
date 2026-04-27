@@ -1,363 +1,165 @@
 # SkillBridge Backend 🎓  
-**Backend API for SkillBridge – Connect with Expert Tutors**
+**The Core API for SkillBridge – Empowering Expert Tutoring Connections**
+
+[![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![Express.js](https://img.shields.io/badge/Express.js-000000?style=flat-square&logo=express&logoColor=white)](https://expressjs.com/)
+[![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=flat-square&logo=prisma&logoColor=white)](https://www.prisma.io/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Stripe](https://img.shields.io/badge/Stripe-635BFF?style=flat-square&logo=stripe&logoColor=white)](https://stripe.com/)
 
 ## 📌 Project Overview
-The **SkillBridge Backend** is a RESTful API built with **Node.js and Express** that powers the SkillBridge tutoring platform.  
-It handles authentication, role-based authorization, tutor discovery, bookings, reviews, and administrative operations.
+The **SkillBridge Backend** is a high-performance RESTful API designed to power the SkillBridge tutoring ecosystem. Built with **Node.js, Express, and TypeScript**, it provides a robust infrastructure for authentication, secure payments, real-time availability management, and administrative oversight.
 
-The backend follows a **backend-first architecture**, exposing secure APIs consumed by the frontend.
+The system follows a clean **Modular Architecture** (Routes → Controller → Service), ensuring scalability and maintainability.
 
 ---
 
-## 🧠 Core Responsibilities
-- User authentication and authorization
-- Role-based access control (Student, Tutor, Admin)
-- Tutor profile and availability management
-- Booking and review system
-- Email notifications
-- Admin moderation and analytics
-- Secure database operations
+## 🚀 Key Features
+
+### 👤 Identity & Access
+- **Secure Authentication**: Powered by **Better Auth** with role-based access control (RBAC).
+- **Multi-Role Support**: Tailored experiences for Students, Tutors, and Administrators.
+- **Profile Management**: Dynamic profile updates and association with tutoring categories.
+
+### 💳 Financial Integration
+- **Stripe Payments**: Integrated checkout flow for session bookings.
+- **Webhook Handling**: Automated booking confirmation upon successful payment detection.
+- **Payment Verification**: Secure server-side validation of transaction statuses.
+
+### 📅 Tutoring Workflow
+- **Availability Management**: Tutors can define and manage their time slots.
+- **Booking Engine**: Students can browse tutors, check availability, and book sessions.
+- **Review System**: Automated rating aggregation and verified reviews post-session.
+
+### 🛡️ Administrative Suite
+- **User Moderation**: Ability to manage user statuses (Ban/Unban).
+- **Global Overview**: Unified dashboard for tracking all bookings, users, and platform analytics.
+- **Category Management**: dynamic creation and editing of tutoring subjects.
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Technology | Purpose |
-|-----------|--------|
-| **Node.js** | Runtime environment |
-| **Express.js** | REST API framework |
-| **Better Auth** | Authentication & session management |
-| **Prisma ORM** | Database ORM and migrations |
-| **PostgreSQL** | Relational database |
-| **Nodemailer** | Email notifications |
-| **CORS** | Cross-origin resource sharing |
-| **dotenv** | Environment variable management |
-
----
-
-## 🔐 Authentication & Authorization
-- Authentication powered by **Better Auth**
-- Secure session handling
-- Role-based access control (RBAC)
-- Protected routes using middleware
-- Admin accounts are **seeded in the database**
-
-### User Roles
-- **Student**
-- **Tutor**
-- **Admin**
-
----
-
-## ✨ Features
-
-### 👤 User Management
-- User registration and login
-- Role selection during registration
-- Profile management
-- Secure session handling
-
-### 👨‍🏫 Tutor Management
-- Tutor profile creation and updates
-- Subject/category association
-- Availability slot management
-- Rating and review tracking
-
-### 📅 Booking System
-- Session booking between students and tutors
-- View upcoming and past bookings
-- Booking status management
-
-### ⭐ Reviews
-- Students can leave reviews after sessions
-- Tutor ratings aggregation
-
-### 🛡️ Admin Controls
-- View all users
-- Ban / unban users
-- View all bookings
-- Manage tutoring categories
-
-### 📧 Email Notifications
-- Account verification emails
-- Booking confirmations
-- Session reminders
-- Powered by **Nodemailer**
-
----
-
-## 🗄️ Database Schema (Core Tables)
-
-- **User**
-- **TutorProfile**
-- **Category**
-- **Booking**
-- **Review**
-- **Availability**
-- **TutorCategory**
-
-> Managed using **Prisma ORM** with **PostgreSQL**.
-
----
-
-## 🗂️ Database Schema
-
-Here is the ER diagram for the SkillBridge:
-
-![Database Schema](https://i.ibb.co.com/PGHvJC8Q/skillbridge.png)
-
-The full ER diagram for the SkillBridge can be viewed online at DrawSQL:
-
-[View Database Schema on DrawSQL](https://drawsql.app/teams/myself-668/diagrams/skillbridge)
+| Category | Technology |
+|:--- |:--- |
+| **Runtime** | Node.js (v20+) |
+| **Framework** | Express.js 5.x |
+| **Language** | TypeScript |
+| **Auth** | Better Auth |
+| **ORM** | Prisma |
+| **Database** | PostgreSQL |
+| **Payments** | Stripe API |
+| **Email** | Nodemailer |
+| **Tooling** | tsup, tsx, dotenv |
 
 ---
 
 ## 📂 Project Structure
 
 ```text
-prisma/
-├── migrations/
-└── schema.prisma
 src/
-├── lib/
-│   ├── auth.ts                 # Better Auth configuration
-│   └── prisma.ts              # Prisma client instance
-│
-├── middleware/
-│   └── auth.ts                # Authentication & role-based guards
-│
-├── modules/
-│   ├── auth/
-│   │   ├── auth.routes.ts
-│   │   ├── auth.controller.ts
-│   │   └── auth.services.ts
-│   │
-│   ├── users/
-│   │   ├── users.routes.ts
-│   │   ├── users.controller.ts
-│   │   └── users.services.ts
-│   │
-│   ├── tutor/
-│   │   ├── tutor.routes.ts
-│   │   ├── tutor.controller.ts
-│   │   └── tutor.services.ts
-│   │
-│   ├── availability/
-│   │   ├── availability.routes.ts
-│   │   ├── availability.controller.ts
-│   │   └── availability.services.ts
-│   │
-│   ├── booking/
-│   │   ├── booking.routes.ts
-│   │   ├── booking.controller.ts
-│   │   └── booking.services.ts
-│   │
-│   ├── reviews/
-│   │   ├── reviews.routes.ts
-│   │   ├── reviews.controller.ts
-│   │   └── reviews.services.ts
-│   │
-│   ├── categories/
-│   │   ├── categories.routes.ts
-│   │   ├── categories.controller.ts
-│   │   └── categories.services.ts
-│   │
-│   ├── tutorCategories/
-│   │   ├── tutorCategories.routes.ts
-│   │   ├── tutorCategories.controller.ts
-│   │   └── tutorCategories.services.ts
-│   │
-│   ├── admin/
-│   │   ├── admin.routes.ts
-│   │   ├── admin.controller.ts
-│   │   └── admin.services.ts
-│   │
-│   └── adminAnalytics/
-│       ├── auth/
-│       │   ├── adminAuth.routes.ts
-│       │   ├── adminAuth.controller.ts
-│       │   └── adminAuth.services.ts
-│       │
-│       ├── availability/
-│       │   ├── adminAvailability.routes.ts
-│       │   ├── adminAvailability.controller.ts
-│       │   └── adminAvailability.services.ts
-│       │
-│       ├── booking/
-│       │   ├── adminBooking.routes.ts
-│       │   ├── adminBooking.controller.ts
-│       │   └── adminBooking.services.ts
-│       │
-│       ├── categories/
-│       │   ├── adminCategories.routes.ts
-│       │   ├── adminCategories.controller.ts
-│       │   └── adminCategories.services.ts
-│       │
-│       ├── reviews/
-│       │   ├── adminReviews.routes.ts
-│       │   ├── adminReviews.controller.ts
-│       │   └── adminReviews.services.ts
-│       │
-│       ├── tutor/
-│       │   ├── adminTutor.routes.ts
-│       │   ├── adminTutor.controller.ts
-│       │   └── adminTutor.services.ts
-│       │
-│       ├── tutorCategories/
-│       │   ├── adminTutorCategories.routes.ts
-│       │   ├── adminTutorCategories.controller.ts
-│       │   └── adminTutorCategories.services.ts
-│       │
-│       └── users/
-│           ├── adminUsers.routes.ts
-│           ├── adminUsers.controller.ts
-│           └── adminUsers.services.ts
-│
-├── scripts/
-│   └── seedAdmin.ts            # Seed admin accounts
-│
-├── app.ts                      # Express app configuration
-└── server.ts                   # Server bootstrap
-
-Each module follows a strict **routes → controller → services** pattern.
-
+├── lib/               # Shared libraries (Prisma, Auth, Stripe)
+├── middleware/        # Authentication & Role guards
+├── modules/           # Feature-based business logic
+│   ├── admin/         # Platform administration
+│   ├── auth/          # Authentication handlers
+│   ├── availability/  # Tutor schedule management
+│   ├── bookings/      # Session booking logic
+│   ├── payments/      # Stripe integration & webhooks
+│   ├── reviews/       # Feedback & Ratings
+│   ├── tutor/         # Tutor profile logic
+│   └── users/         # User profile management
+├── scripts/           # Maintenance & Seeding scripts
+├── app.ts             # Express application setup
+└── server.ts          # Entry point
 ```
-
-## 🌐 API Routes (Overview)
-
-### 🔓 Public Routes
-| Method | Endpoint | Description |
-|------|----------|-------------|
-| GET | `/api/availability` | Get all availability slots |
-| GET | `/api/availability/:id` | Get single availability |
-| GET | `/api/availability/tutor/:tutorId` | Get availability by tutor |
-| GET | `/api/categories` | Get all categories |
-| GET | `/api/categories/:id` | Get single category |
-| GET | `/api/reviews` | Get all reviews |
-| GET | `/api/tutors` | Browse tutors |
-| GET | `/api/tutors/:id` | Get tutor profile |
-| GET | `/api/tutors/by-user/:userId` | Get tutor by user ID |
 
 ---
 
-### 🎒 Student Routes (Protected)
+## 🌐 API Reference (Highlights)
+
+### 💳 Payment Routes
 | Method | Endpoint | Description |
-|------|----------|-------------|
-| GET | `/api/bookings/student/me` | View my bookings |
-| GET | `/api/bookings/tutor/:tutorId/public` | View tutor public bookings |
-| POST | `/api/bookings` | Create a booking |
-| PATCH | `/api/bookings/:id` | Update booking |
-| POST | `/api/reviews` | Leave a review |
-| PATCH | `/api/reviews/:id` | Update my review |
-| DELETE | `/api/reviews/:id` | Delete my review |
+|:--- |:--- |:--- |
+| `POST` | `/api/payments/create-checkout-session` | Initialize Stripe session |
+| `POST` | `/api/payments/webhook` | Stripe event listener |
+| `POST` | `/api/payments/verify` | Internal payment verification |
+
+### 📅 Booking & Availability
+| Method | Endpoint | Description |
+|:--- |:--- |:--- |
+| `GET` | `/api/availability/me` | Fetch tutor's own slots |
+| `POST` | `/api/bookings` | Create new booking |
+| `GET` | `/api/bookings/student/me` | View user's booked sessions |
+
+### 🛡️ Admin API
+| Method | Endpoint | Description |
+|:--- |:--- |:--- |
+| `GET` | `/api/admin/dashboard` | Platform metrics & overview |
+| `PATCH` | `/api/admin/users/:id` | Update user status/roles |
+
+> [!TIP]
+> For a full list of routes, refer to the individual module directories in `src/modules/`.
 
 ---
 
-### 👨‍🏫 Tutor Routes (Protected)
-| Method | Endpoint | Description |
-|------|----------|-------------|
-| GET | `/api/availability/me` | Get my availability |
-| POST | `/api/availability/me` | Create availability |
-| PATCH | `/api/availability/:id` | Update availability |
-| DELETE | `/api/availability/:id` | Delete availability |
-| GET | `/api/bookings/tutor/:id` | Get my bookings |
-| GET | `/api/bookings/tutor/:id/upcoming` | Get upcoming bookings |
-| GET | `/api/tutors/dashboard/:id` | Tutor dashboard statistics |
-| PATCH | `/api/tutors` | Update tutor profile |
-| DELETE | `/api/tutors/:id` | Delete tutor profile |
-| POST | `/api/tutor-categories` | Add tutor category |
-| DELETE | `/api/tutor-categories/:id` | Remove tutor category |
-| GET | `/api/reviews/tutor/:id` | Get my reviews |
+## ⚙️ Getting Started
 
----
-
-### 🛡️ Admin Routes (Protected)
-| Method | Endpoint | Description |
-|------|----------|-------------|
-| GET | `/api/admin/users` | Get all users |
-| PATCH | `/api/admin/users/:id` | Update user |
-| GET | `/api/admin/tutor` | Get all tutors |
-| GET | `/api/admin/bookings` | Get all bookings |
-| GET | `/api/admin/dashboard` | Admin dashboard statistics |
-| POST | `/api/admin/categories` | Create category |
-| PATCH | `/api/admin/categories/:id` | Update category |
-| GET | `/api/admin-analytics/dashboard` | Admin analytics dashboard |
-| GET | `/api/admin-analytics/stats` | Platform statistics |
-| GET | `/api/reviews/admin` | Get all reviews |
-| DELETE | `/api/reviews/admin/:id` | Delete review |
-
----
-
-### 🔐 Authenticated Routes
-| Method | Endpoint | Description |
-|------|----------|-------------|
-| GET | `/api/auth` | Get current user |
-| POST | `/api/auth/sign-out` | Sign out |
-| GET | `/api/auth/tutor-only` | Tutor-only test route |
-
----
-
-## 🚀 Getting Started
-
-### 1️⃣ Install dependencies
-```bash
-npm install
-```
-## ⚙️ Environment Variables
-
-Create a `.env` file in the root directory:
-
-```env
-PORT=5000
-DATABASE_URL=postgresql://user:password@localhost:5432/skillbridge
-BETTER_AUTH_SECRET=your_secret_key
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_secret_key
-APP_USER=your_email@gmail.com
-APP_PASS=your_email_password
-APP_URL=http://localhost:3000
-```
-### 3️⃣ Run database migrations
-```bash
-npx prisma migrate dev
-```
-### 4️⃣ Seed admin user
-```bash
-npm run seed:admin
-```
-### 5️⃣ Start development server
-```bash
-npm run dev
-```
-
-## 🚀 Getting Started
-### 1️⃣ Clone the repository
+### 1️⃣ Clone & Install
 ```bash
 git clone https://github.com/noornabi-noor/SkillBridge-Backend-.git
-cd skillbridge-backend
-```
-
-### 2️⃣ Install dependencies
-```bash
+cd SkillBridge-Backend-
 npm install
 ```
 
-### 3️⃣ Setup Prisma
+### 2️⃣ Environment Configuration
+Create a `.env` file in the root:
+```env
+# Server
+PORT=5000
+APP_URL=http://localhost:3000
+
+# Database
+DATABASE_URL="postgresql://user:pass@host:port/db?sslmode=require"
+
+# Auth (Better Auth)
+BETTER_AUTH_SECRET=your_secret
+BETTER_AUTH_URL=http://localhost:5000
+
+# Payments (Stripe)
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+# Email (Nodemailer)
+APP_USER=your_email@gmail.com
+APP_PASS=your_app_password
+```
+
+### 3️⃣ Database Initialization
 ```bash
 npx prisma generate
 npx prisma migrate dev
+npm run seed:admin
 ```
 
-### 4️⃣ Seed Admin User
+### 4️⃣ Launch
 ```bash
-node prisma/seed.js
-```
-
-### 5️⃣ Run the server
-```bash
+# Development mode
 npm run dev
+
+# Build for production
+npm run build
 ```
-Server will start at:
-```bash
-📍 http://localhost:5000
-```
+
+---
+
+## 🗄️ Database Schema
+Managed via **Prisma**. The visual schema can be explored here:
+[View ER Diagram on DrawSQL](https://drawsql.app/teams/myself-668/diagrams/skillbridge)
+
+![Database Schema](https://i.ibb.co.com/PGHvJC8Q/skillbridge.png)
+
+---
+
+## 📄 License
+This project is licensed under the [ISC License](LICENSE).
