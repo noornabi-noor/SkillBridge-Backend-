@@ -7,17 +7,18 @@ import nodemailer from "nodemailer";
 
 // nodemailer for email verification
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
+  host: process.env.EMAIL_SENDER_SMTP_HOST || "smtp.gmail.com",
+  port: Number(process.env.EMAIL_SENDER_SMTP_PORT) || 587,
+  secure: process.env.EMAIL_SENDER_SMTP_PORT === "465", // true for 465, false for other ports
   auth: {
-    user: process.env.APP_USER,
-    pass: process.env.APP_PASS,
+    user: process.env.EMAIL_SENDER_SMTP_USER || process.env.APP_USER,
+    pass: process.env.EMAIL_SENDER_SMTP_PASS || process.env.APP_PASS,
   },
 });
 
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL,
+  debug: true,
   database: prismaAdapter(prisma, { provider: "postgresql" }),
   trustedOrigins: [process.env.APP_URL!,
   "http://localhost:3000",
@@ -50,47 +51,6 @@ export const auth = betterAuth({
     // disableCSRFCheck: true,
   },
 
-  // session: {
-  //   cookieCache: {
-  //     secure: true,
-  //     enabled: true,
-  //     maxAge: 5 * 60,
-  //     sameSite: "lax",
-  //     httpOnly: true,
-  //     path: "/",
-  //   },
-  // },
-  // advanced: {
-  //   useSecureCookies: true,
-  //   cookiePrefix: "__Secure-better-auth",
-  // },
-
-  // advanced: {
-  //   useSecureCookies: true,
-  //   defaultCookieAttributes: {
-  //     sameSite: "none",
-  //     secure: true,
-  //   },
-  //   // ADD THIS SECTION: Specifically target the 'state' cookie
-  //   cookies: {
-  //     state: {
-  //       attributes: {
-  //         sameSite: "none",
-  //         secure: true,
-  //       },
-  //     },
-  //   },
-  // },
-
-  // advanced: {
-  //   defaultCookieAttributes: {
-  //     sameSite: "lax",
-  //     secure: true,
-  //     httpOnly: true,
-  //     // partitioned: true,
-  //   },
-  // },
-
   emailAndPassword: {
     enabled: true,
     autoSignIn: false,
@@ -109,10 +69,6 @@ export const auth = betterAuth({
         type: "string",
         required: false,
       },
-      image: {
-        type: "string",
-        required: false,
-      },
     },
   },
 
@@ -122,9 +78,9 @@ export const auth = betterAuth({
     autoSignInAfterVerification: true, //after sign up automatic sign in app
     sendVerificationEmail: async ({ user, url, token }, request) => {
       try {
-        const verifationUrl = `${process.env.APP_URL}/verify-email?token=${token}`;
+        const verifationUrl = `${process.env.BETTER_AUTH_URL}/verify-email?token=${token}&callbackURL=${process.env.APP_URL}`;
         const info = await transporter.sendMail({
-          from: '"SkillBridge" <skillbridge@gmail.com>',
+          from: `"SkillBridge" <${process.env.EMAIL_SENDER_SMTP_FROM || process.env.APP_USER}>`,
           to: user.email,
           subject: "Please Verify Your Email!",
           html: `<!DOCTYPE html>
@@ -198,7 +154,6 @@ export const auth = betterAuth({
         });
         // console.log("Message sent:", info.messageId);
       } catch (error) {
-        console.error(error);
         throw error;
       }
     },

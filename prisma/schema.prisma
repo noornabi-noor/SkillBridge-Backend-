@@ -5,8 +5,8 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
+  output   = "../generated/prisma/client"
 }
 
 datasource db {
@@ -24,6 +24,12 @@ enum BookingStatus {
   CONFIRMED
   COMPLETED
   CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
 }
 
 enum UserStatus {
@@ -104,9 +110,26 @@ model Booking {
   student User         @relation("StudentBookings", fields: [studentId], references: [id], onDelete: Cascade)
   tutor  TutorProfile @relation("TutorBookings", fields: [tutorId], references: [id], onDelete: Cascade)
   review Review?
+  payment Payment?
 
   @@index([tutorId, date])
   @@map("bookings")
+}
+
+model Payment {
+  id               String        @id @default(uuid())
+  bookingId        String        @unique
+  amount           Float
+  currency         String        @default("usd")
+  status           PaymentStatus @default(PENDING)
+  stripeSessionId  String?       @unique
+  stripePaymentId  String?       @unique
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
 }
 
 model Review {

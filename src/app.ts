@@ -12,14 +12,21 @@ import { adminRouter } from "./modules/admin/admin.routes";
 import { adminAnalyticsRouter } from "./modules/adminAnalytic/adminAnalytic.routes";
 import { usersRouter } from "./modules/users/user.routes";
 import { authRouter } from "./modules/auth/auth.router";
+import { paymentRouter } from "./modules/payments/payment.routes";
 import errorHandler from "./middleware/globalErrorHandler";
 import { notFound } from "./middleware/notFound";
 
 const app = express();
-app.use(express.json());
+
+// Stripe webhook must be before express.json() for raw body access
+app.use("/api/v1/payments/webhook", express.raw({ type: "application/json" }));
+
+// Move express.json() after better-auth handler to avoid issues
+// app.use(express.json()); // Removed from here
 
 const allowedOrigins = [
   process.env.APP_URL || "http://localhost:3000",
+  "http://localhost:4000",
   process.env.PROD_APP_URL, // Production frontend URL
 ].filter(Boolean); // Remove undefined values
 
@@ -47,36 +54,40 @@ app.use(
   }),
 );
 
+// Mount express json middleware before Better Auth handler
+app.use(express.json());
+
 // better auth 
-app.all("/api/auth/*splat", toNodeHandler(auth));
+app.all("/api/auth/*path", toNodeHandler(auth));
 
-app.use("/api/tutors", tutorRouter);
+app.use("/api/v1/tutors", tutorRouter);
 
-app.use("/api/categories", categoryRouter);
+app.use("/api/v1/categories", categoryRouter);
 
-app.use("/api/availability", availabilityRouter);
+app.use("/api/v1/availability", availabilityRouter);
 
-app.use("/api/bookings", bookingRouter);
+app.use("/api/v1/bookings", bookingRouter);
 
-app.use("/api/reviews", reviewRouter);
+app.use("/api/v1/reviews", reviewRouter);
 
-app.use("/api/tutor-categories", tutorCategoryRouter);
+app.use("/api/v1/tutor-categories", tutorCategoryRouter);
 
-app.use("/api/admin", adminRouter);
+app.use("/api/v1/admin", adminRouter);
 
-app.use("/api/adminAnalytic", adminAnalyticsRouter);
+app.use("/api/v1/adminAnalytic", adminAnalyticsRouter);
 
-app.use("/api/users", usersRouter);
+app.use("/api/v1/users", usersRouter);
 
-app.use("/api/me", authRouter);
+app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/payments", paymentRouter);
+
+app.get("/", (req : Request, res: Response)=>{
+    res.send("Hello world!");
+});
 
 // global error handler
 app.use(errorHandler);
 // not found
 app.use(notFound);
-
-app.get("", (req : Request, res: Response)=>{
-    res.send("Hello world!");
-});
 
 export default app;

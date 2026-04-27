@@ -15,7 +15,7 @@ function errorHandler(
   next: NextFunction
 ) {
   let statusCode = 500;
-  let errorMessage = "Inter server error!!";
+  let errorMessage = "Internal server error!!";
   let errorDetails = err;
 
     // PrismaClientKnownRequestError
@@ -224,10 +224,16 @@ function errorHandler(
     errorMessage = 'Resource conflict occurred.';
   }
 
+  console.error("DEBUG ERR:", err);
   res.status(statusCode);
   res.json({
+    success: false,
     message: errorMessage,
-    error: errorDetails,
+    error: errorDetails instanceof Error ? {
+      name: errorDetails.name,
+      message: errorDetails.message,
+      stack: errorDetails.stack,
+    } : errorDetails,
   });
 }
 

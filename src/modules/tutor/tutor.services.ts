@@ -221,12 +221,65 @@ export async function getTutorDashboardStats(userId: string) {
     };
   }
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const globalBookings = await prisma.booking.findMany({ take: 5 });
+  console.log("DIAGNOSTIC: Global Bookings in DB:", globalBookings.map(b => ({ id: b.id, tutorId: b.tutorId, studentId: b.studentId })));
+
   const bookings = await prisma.booking.findMany({
-    where: { tutorId: profile.userId },
+    where: { tutorId: profile.id },
+    include: {
+      student: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+        },
+      },
+    },
+  });
+
+  const allBookings = await prisma.booking.findMany({
+    where: { tutorId: profile.id },
+  });
+
+  console.log("DEBUG: Tutor Dashboard Profile ID:", profile.id);
+  console.log("DEBUG: Tutor Dashboard All Bookings Count:", allBookings.length);
+  console.log("DEBUG: Tutor Dashboard All Bookings Sample:", allBookings.slice(0, 2).map(b => ({ id: b.id, status: b.status, date: b.date })));
+
+  const upcomingSessionsList = await prisma.booking.findMany({
+    where: {
+      tutorId: profile.id,
+      status: { in: ["CONFIRMED", "PENDING"] },
+      date: {
+        gte: today,
+      },
+    },
+    include: {
+      student: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+        },
+      },
+    },
+    orderBy: {
+      date: "asc",
+    },
+  });
+
+  console.log("DEBUG: Tutor Dashboard Upcoming Sessions Found:", upcomingSessionsList.length);
+
+  const availability = await prisma.availability.findMany({
+    where: { tutorId: profile.id },
   });
 
   const reviews = await prisma.review.findMany({
-    where: { tutorId: profile.userId },
+    where: { tutorId: profile.id },
   });
 
   const totalReviews = reviews.length;
@@ -240,19 +293,17 @@ export async function getTutorDashboardStats(userId: string) {
           ).toFixed(1),
         );
 
-  const upcomingSessions = bookings.filter(
-    (b) => new Date(b.date) > new Date(),
-  ).length;
-
   return {
     user: profile.user,
     profile,
     bookings,
     reviews,
+    availability,
     totalBookings: bookings.length,
     totalReviews,
     averageRating,
-    upcomingSessions,
+    upcomingSessions: upcomingSessionsList.length,
+    upcomingSessionsList,
   };
 }
 
