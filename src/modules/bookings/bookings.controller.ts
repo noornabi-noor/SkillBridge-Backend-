@@ -1,18 +1,17 @@
 import { Request, Response, NextFunction } from "express";
 import { bookingServices } from "./bookings.services";
+import { createBookingSchema, updateBookingSchema } from "./bookings.validation";
 import { prisma } from "../../lib/prisma";
 
 const createBooking = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const studentId = req.user!.id;
 
+    const data = createBookingSchema.parse(req.body);
     const result = await bookingServices.createBooking(studentId, {
-      tutorId: req.body.tutorId,
-      date: new Date(req.body.date),
-      startTime: req.body.startTime,
-      endTime: req.body.endTime,
+      ...data,
+      date: new Date(data.date),
     });
-
     res.status(201).json({ success: true, data: result });
   } catch (error) {
     next(error);
@@ -66,7 +65,11 @@ const updateBooking = async (req: Request, res: Response, next: NextFunction) =>
       return res.status(403).json({ message: "Invalid status change" });
     }
 
-    const result = await bookingServices.updateBooking(id as string, req.body);
+    const data = updateBookingSchema.parse(req.body);
+    const result = await bookingServices.updateBooking(id as string, {
+      ...data,
+      date: data.date ? new Date(data.date) : undefined,
+    } as any);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
     next(error);

@@ -67,7 +67,11 @@ const getCurrentUser = async (id: string) => {
 
 const updateUserStatus = async (id: string, status: "ACTIVE" | "BANNED") => {
   const user = await prisma.user.findUnique({ where: { id } });
-  if (!user) throw new Error("User not found");
+  if (!user) {
+     const err = new Error("User not found");
+     err.name = "NotFoundError";
+     throw err;
+  }
 
   return await prisma.user.update({
     where: { id },
@@ -75,22 +79,24 @@ const updateUserStatus = async (id: string, status: "ACTIVE" | "BANNED") => {
   });
 };
 
-const updateUserProfile = async (id: string, data: { name?: string; email?: string; image?: string, phone?: string }) => {
+const updateUserProfile = async (id: string, data: { name?: string; email?: string; image?: string; phone?: string }) => {
   const user = await prisma.user.findUnique({ where: { id } });
-  if (!user) throw new Error("User not found");
+  if (!user) {
+     const err = new Error("User not found");
+     err.name = "NotFoundError";
+     throw err;
+  }
 
   return await prisma.user.update({
     where: { id },
     data: {
-      name: data.name ?? user.name,
-      email: data.email ?? user.email,
-      image: data.image ?? user.image,
-      phone: data.phone ?? user.phone
+      ...(data.name && { name: data.name }),
+      ...(data.email && { email: data.email }),
+      ...(data.image && { image: data.image }),
+      ...(data.phone && { phone: data.phone }),
     },
   });
 };
-
-
 
 export const usersServices = {
   getAllUsers,

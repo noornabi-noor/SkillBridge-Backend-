@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { tutorCategoryServices } from "./tutorCategory.services";
+import { createTutorCategorySchema } from "./tutorCategory.validation";
 
 const createTutorCategory = async (
   req: Request,
@@ -7,8 +8,8 @@ const createTutorCategory = async (
   next: NextFunction
 ) => {
   try {
-    const result = await tutorCategoryServices.addTutorToCategory(req.body);
-
+    const data = createTutorCategorySchema.parse(req.body);
+    const result = await tutorCategoryServices.addTutorToCategory(data);
     res.status(201).json({
       success: true,
       data: result,

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { tutorServices } from "./tutor.services";
+import { createTutorProfileSchema, updateTutorProfileSchema } from "./tutor.validation";
 import { prisma } from "../../lib/prisma";
 import { userRoles } from "../../middleware/auth";
 
@@ -18,7 +19,11 @@ const createTutorProfile = async (req: Request, res: Response, next: NextFunctio
       throw err;
     }
 
-    const tutorProfile = await tutorServices.createTutorProfile(req.body, user.id);
+
+    // Zod validation
+    const data = createTutorProfileSchema.parse(req.body);
+
+    const tutorProfile = await tutorServices.createTutorProfile(data as any, user.id);
 
     await prisma.user.update({
       where: { id: user.id },
@@ -69,7 +74,9 @@ const updateTutorProfile = async (req: Request, res: Response, next: NextFunctio
       throw err;
     }
 
-    const updatedProfile = await tutorServices.updateTutorProfile(user.id, req.body);
+
+    const data = updateTutorProfileSchema.parse(req.body);
+    const updatedProfile = await tutorServices.updateTutorProfile(user.id, data as any);
 
     res.status(200).json({ success: true, data: updatedProfile });
   } catch (error) {

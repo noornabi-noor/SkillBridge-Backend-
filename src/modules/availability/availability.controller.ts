@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { availabilityServices } from "./availability.services";
+import { createAvailabilitySchema, updateAvailabilitySchema } from "./availability.validation";
 
 const createAvailability = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -8,7 +9,8 @@ const createAvailability = async (req: Request, res: Response, next: NextFunctio
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
-    const result = await availabilityServices.createAvailability(req.body, tutorId);
+    const data = createAvailabilitySchema.parse(req.body);
+    const result = await availabilityServices.createAvailability(data, tutorId);
     res.status(201).json({ success: true, data: result });
   } catch (error) {
     next(error);
@@ -41,7 +43,8 @@ const updateAvailability = async (req: Request, res: Response, next: NextFunctio
     }
 
     const { id } = req.params;
-    const result = await availabilityServices.updateAvailability(id as string, req.body);
+    const data = updateAvailabilitySchema.parse(req.body);
+    const result = await availabilityServices.updateAvailability(id as string, data as any);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
     next(error);

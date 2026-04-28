@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { adminServices } from "./admin.services";
+import { updateUserSchema, createCategorySchema } from "./admin.validation";
 
 const getAllUsers = async (_req: Request, res: Response, next: NextFunction) => {
   try {
@@ -13,7 +14,8 @@ const getAllUsers = async (_req: Request, res: Response, next: NextFunction) => 
 const updateUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const result = await adminServices.updateUser(id as string, req.body);
+    const data = updateUserSchema.parse(req.body);
+    const result = await adminServices.updateUser(id as string, data as any);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
     next(error);
@@ -40,7 +42,8 @@ const getAllBookings = async (_req: Request, res: Response, next: NextFunction) 
 
 const createCategory = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await adminServices.createCategory(req.body);
+    const data = createCategorySchema.parse(req.body);
+    const result = await adminServices.createCategory(data);
     res.status(201).json({ success: true, data: result });
   } catch (error) {
     next(error);
@@ -50,7 +53,8 @@ const createCategory = async (req: Request, res: Response, next: NextFunction) =
 const updateCategory = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const result = await adminServices.updateCategory(id as string, req.body);
+    const data = createCategorySchema.partial().parse(req.body);
+    const result = await adminServices.updateCategory(id as string, data as any);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
     next(error);

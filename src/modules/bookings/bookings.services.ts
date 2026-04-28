@@ -135,12 +135,19 @@ const updateBooking = async (
   });
 
   if (!booking) {
-    throw new Error("Booking not found");
+    const err = new Error("Booking not found");
+    err.name = "NotFoundError";
+    throw err;
   }
 
   return prisma.booking.update({
     where: { id: bookingId },
-    data,
+    data: {
+      ...(data.date && { date: data.date }),
+      ...(data.startTime && { startTime: data.startTime }),
+      ...(data.endTime && { endTime: data.endTime }),
+      ...(data.status && { status: data.status }),
+    },
   });
 };
 

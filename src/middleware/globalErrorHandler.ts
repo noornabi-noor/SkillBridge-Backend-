@@ -1,10 +1,13 @@
 import { NextFunction, Request, Response } from "express";
 import { Prisma } from "../../generated/prisma/client";
+import { ZodError } from "zod";
+import { handleZodError } from "../errorHelpers/handleZodError";
 
 interface ErrorResponse {
   success: boolean;
   message: string;
   error?: any;
+  errorSources?: any[];
   stack?: string;
 }
 
@@ -16,10 +19,17 @@ function errorHandler(
 ) {
   let statusCode = 500;
   let errorMessage = "Internal server error!!";
+  let errorSources: any[] = [];
   let errorDetails = err;
 
-    // PrismaClientKnownRequestError
-  if (err instanceof Prisma.PrismaClientKnownRequestError) {
+  if (err instanceof ZodError) {
+    const simplifiedError = handleZodError(err);
+    statusCode = simplifiedError.statusCode || 400;
+    errorMessage = simplifiedError.message;
+    errorSources = simplifiedError.errorSources;
+  }
+  // PrismaClientKnownRequestError
+  else if (err instanceof Prisma.PrismaClientKnownRequestError) {
     switch (err.code) {
       case 'P2000':
         statusCode = 400;
@@ -229,6 +239,7 @@ function errorHandler(
   res.json({
     success: false,
     message: errorMessage,
+    errorSources,
     error: errorDetails instanceof Error ? {
       name: errorDetails.name,
       message: errorDetails.message,

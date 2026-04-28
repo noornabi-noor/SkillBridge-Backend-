@@ -2,7 +2,9 @@ import { Category } from "../../../generated/prisma/client";
 import { prisma } from "../../lib/prisma";
 
 const createCategories = async (
-  data: Omit<Category, "id" | "createdAt" | "updatedAt" | "tutors">,
+  data: Omit<Category, "id" | "createdAt" | "updatedAt" | "tutors"> & {
+    name?: string | undefined;
+  }
 ) => {
   const existing = await prisma.category.findFirst({
     where: {
@@ -85,8 +87,8 @@ const getSingleCategory = async (categoryId: string) => {
 const updateCategory = async (
   categoryId: string,
   data: {
-    name?: string;
-    tutorIds?: string[];
+    name?: string | undefined;
+    tutorIds?: string[] | undefined;
   },
 ) => {
   const category = await prisma.category.findUnique({

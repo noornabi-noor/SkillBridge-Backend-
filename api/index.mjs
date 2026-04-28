@@ -1,5 +1,11 @@
+var __defProp = Object.defineProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+
 // src/app.ts
-import express11 from "express";
+import express12 from "express";
 import cors from "cors";
 import { toNodeHandler } from "better-auth/node";
 
@@ -9,6 +15,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 
 // src/lib/prisma.ts
 import "dotenv/config";
+import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 // generated/prisma/client.ts
@@ -22,17 +29,17 @@ var config = {
   "clientVersion": "7.3.0",
   "engineVersion": "9d6ad21cbbceab97458517b147a6a09ff43aa735",
   "activeProvider": "postgresql",
-  "inlineSchema": '// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider = "prisma-client"\n  output   = "../generated/prisma"\n}\n\ndatasource db {\n  provider = "postgresql"\n}\n\nenum Role {\n  STUDENT\n  TUTOR\n  ADMIN\n}\n\nenum BookingStatus {\n  PENDING\n  CONFIRMED\n  COMPLETED\n  CANCELLED\n}\n\nenum UserStatus {\n  ACTIVE\n  BANNED\n}\n\nmodel TutorProfile {\n  id           String   @id @default(uuid())\n  userId       String   @unique\n  bio          String?\n  pricePerHour Int\n  experience   Int\n  rating       Float    @default(0)\n  totalReviews Int      @default(0)\n  createdAt    DateTime @default(now())\n  updatedAt    DateTime @updatedAt\n\n  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)\n  categories   TutorCategory[]\n  availability Availability[]\n  bookings     Booking[]       @relation("TutorBookings")\n  reviews      Review[]\n\n  @@map("tutor_profiles")\n}\n\nmodel Category {\n  id        String   @id @default(uuid())\n  name      String   @unique\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  tutors TutorCategory[]\n\n  @@map("categories")\n}\n\nmodel TutorCategory {\n  id         String @id @default(uuid())\n  tutorId    String\n  categoryId String\n\n  tutor    TutorProfile @relation(fields: [tutorId], references: [id], onDelete: Cascade)\n  category Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)\n\n  @@unique([tutorId, categoryId])\n  @@map("tutor_categories")\n}\n\nmodel Availability {\n  id        String  @id @default(uuid())\n  tutorId   String\n  dayOfWeek Int\n  startTime String\n  endTime   String\n  isBooked  Boolean @default(false)\n\n  tutor TutorProfile @relation(fields: [tutorId], references: [id], onDelete: Cascade)\n\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  @@map("availability")\n}\n\nmodel Booking {\n  id        String        @id @default(uuid())\n  studentId String\n  tutorId   String\n  date      DateTime\n  startTime String\n  endTime   String\n  status    BookingStatus @default(PENDING)\n  createdAt DateTime      @default(now())\n  updatedAt DateTime      @updatedAt\n\n  student User         @relation("StudentBookings", fields: [studentId], references: [id], onDelete: Cascade)\n  tutor   TutorProfile @relation("TutorBookings", fields: [tutorId], references: [id], onDelete: Cascade)\n  review  Review?\n\n  @@index([tutorId, date])\n  @@map("bookings")\n}\n\nmodel Review {\n  id        String   @id @default(uuid())\n  studentId String\n  tutorId   String\n  bookingId String   @unique\n  rating    Int\n  comment   String?\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  student User         @relation(fields: [studentId], references: [id], onDelete: Cascade)\n  tutor   TutorProfile @relation(fields: [tutorId], references: [id], onDelete: Cascade)\n  booking Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)\n\n  @@map("reviews")\n}\n\nmodel User {\n  id            String    @id\n  name          String\n  email         String\n  emailVerified Boolean   @default(false)\n  image         String?\n  phone         String?\n  createdAt     DateTime  @default(now())\n  updatedAt     DateTime  @updatedAt\n  sessions      Session[]\n  accounts      Account[]\n\n  role   Role       @default(STUDENT)\n  status UserStatus @default(ACTIVE)\n\n  tutorProfile    TutorProfile?\n  studentBookings Booking[]     @relation("StudentBookings")\n  reviews         Review[]\n\n  @@unique([email])\n  @@map("user")\n}\n\nmodel Session {\n  id        String   @id\n  expiresAt DateTime\n  token     String\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n  ipAddress String?\n  userAgent String?\n  userId    String\n  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  @@unique([token])\n  @@index([userId])\n  @@map("session")\n}\n\nmodel Account {\n  id                    String    @id\n  accountId             String\n  providerId            String\n  userId                String\n  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)\n  accessToken           String?\n  refreshToken          String?\n  idToken               String?\n  accessTokenExpiresAt  DateTime?\n  refreshTokenExpiresAt DateTime?\n  scope                 String?\n  password              String?\n  createdAt             DateTime  @default(now())\n  updatedAt             DateTime  @updatedAt\n\n  @@index([userId])\n  @@map("account")\n}\n\nmodel Verification {\n  id         String   @id\n  identifier String\n  value      String\n  expiresAt  DateTime\n  createdAt  DateTime @default(now())\n  updatedAt  DateTime @updatedAt\n\n  @@index([identifier])\n  @@map("verification")\n}\n',
+  "inlineSchema": '// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider = "prisma-client"\n  output   = "../generated/prisma"\n}\n\ndatasource db {\n  provider = "postgresql"\n}\n\nenum Role {\n  STUDENT\n  TUTOR\n  ADMIN\n}\n\nenum BookingStatus {\n  PENDING\n  CONFIRMED\n  COMPLETED\n  CANCELLED\n}\n\nenum PaymentStatus {\n  PENDING\n  SUCCESS\n  FAILED\n}\n\nenum UserStatus {\n  ACTIVE\n  BANNED\n}\n\nmodel TutorProfile {\n  id           String   @id @default(uuid())\n  userId       String   @unique\n  bio          String?\n  pricePerHour Float\n  experience   Float\n  rating       Float    @default(0)\n  totalReviews Int      @default(0)\n  createdAt    DateTime @default(now())\n  updatedAt    DateTime @updatedAt\n\n  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)\n  categories   TutorCategory[]\n  availability Availability[]\n  bookings     Booking[]       @relation("TutorBookings")\n  reviews      Review[]\n\n  @@map("tutor_profiles")\n}\n\nmodel Category {\n  id        String   @id @default(uuid())\n  name      String   @unique\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  tutors TutorCategory[]\n\n  @@map("categories")\n}\n\nmodel TutorCategory {\n  id         String @id @default(uuid())\n  tutorId    String\n  categoryId String\n\n  tutor    TutorProfile @relation(fields: [tutorId], references: [id], onDelete: Cascade)\n  category Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)\n\n  @@unique([tutorId, categoryId])\n  @@map("tutor_categories")\n}\n\nmodel Availability {\n  id        String  @id @default(uuid())\n  tutorId   String\n  dayOfWeek Int\n  startTime String\n  endTime   String\n  isBooked  Boolean @default(false)\n\n  tutor TutorProfile @relation(fields: [tutorId], references: [id], onDelete: Cascade)\n\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  @@map("availability")\n}\n\nmodel Booking {\n  id        String        @id @default(uuid())\n  studentId String\n  tutorId   String\n  date      DateTime\n  startTime String\n  endTime   String\n  status    BookingStatus @default(PENDING)\n  createdAt DateTime      @default(now())\n  updatedAt DateTime      @updatedAt\n\n  student User         @relation("StudentBookings", fields: [studentId], references: [id], onDelete: Cascade)\n  tutor   TutorProfile @relation("TutorBookings", fields: [tutorId], references: [id], onDelete: Cascade)\n  review  Review?\n  payment Payment?\n\n  @@index([tutorId, date])\n  @@map("bookings")\n}\n\nmodel Payment {\n  id              String        @id @default(uuid())\n  bookingId       String        @unique\n  amount          Float\n  currency        String        @default("usd")\n  status          PaymentStatus @default(PENDING)\n  stripeSessionId String?       @unique\n  stripePaymentId String?       @unique\n  createdAt       DateTime      @default(now())\n  updatedAt       DateTime      @updatedAt\n\n  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)\n\n  @@map("payments")\n}\n\nmodel Review {\n  id        String   @id @default(uuid())\n  studentId String\n  tutorId   String\n  bookingId String   @unique\n  rating    Float\n  comment   String?\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  student User         @relation(fields: [studentId], references: [id], onDelete: Cascade)\n  tutor   TutorProfile @relation(fields: [tutorId], references: [id], onDelete: Cascade)\n  booking Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)\n\n  @@map("reviews")\n}\n\nmodel User {\n  id            String    @id\n  name          String\n  email         String\n  emailVerified Boolean   @default(false)\n  image         String?\n  phone         String?\n  createdAt     DateTime  @default(now())\n  updatedAt     DateTime  @updatedAt\n  sessions      Session[]\n  accounts      Account[]\n\n  role   Role       @default(STUDENT)\n  status UserStatus @default(ACTIVE)\n\n  tutorProfile    TutorProfile?\n  studentBookings Booking[]     @relation("StudentBookings")\n  reviews         Review[]\n\n  @@unique([email])\n  @@map("user")\n}\n\nmodel Session {\n  id        String   @id\n  expiresAt DateTime\n  token     String\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n  ipAddress String?\n  userAgent String?\n  userId    String\n  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  @@unique([token])\n  @@index([userId])\n  @@map("session")\n}\n\nmodel Account {\n  id                    String    @id\n  accountId             String\n  providerId            String\n  userId                String\n  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)\n  accessToken           String?\n  refreshToken          String?\n  idToken               String?\n  accessTokenExpiresAt  DateTime?\n  refreshTokenExpiresAt DateTime?\n  scope                 String?\n  password              String?\n  createdAt             DateTime  @default(now())\n  updatedAt             DateTime  @updatedAt\n\n  @@index([userId])\n  @@map("account")\n}\n\nmodel Verification {\n  id         String   @id\n  identifier String\n  value      String\n  expiresAt  DateTime\n  createdAt  DateTime @default(now())\n  updatedAt  DateTime @updatedAt\n\n  @@index([identifier])\n  @@map("verification")\n}\n',
   "runtimeDataModel": {
     "models": {},
     "enums": {},
     "types": {}
   }
 };
-config.runtimeDataModel = JSON.parse('{"models":{"TutorProfile":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"userId","kind":"scalar","type":"String"},{"name":"bio","kind":"scalar","type":"String"},{"name":"pricePerHour","kind":"scalar","type":"Int"},{"name":"experience","kind":"scalar","type":"Int"},{"name":"rating","kind":"scalar","type":"Float"},{"name":"totalReviews","kind":"scalar","type":"Int"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"},{"name":"user","kind":"object","type":"User","relationName":"TutorProfileToUser"},{"name":"categories","kind":"object","type":"TutorCategory","relationName":"TutorCategoryToTutorProfile"},{"name":"availability","kind":"object","type":"Availability","relationName":"AvailabilityToTutorProfile"},{"name":"bookings","kind":"object","type":"Booking","relationName":"TutorBookings"},{"name":"reviews","kind":"object","type":"Review","relationName":"ReviewToTutorProfile"}],"dbName":"tutor_profiles"},"Category":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"name","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"},{"name":"tutors","kind":"object","type":"TutorCategory","relationName":"CategoryToTutorCategory"}],"dbName":"categories"},"TutorCategory":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"tutorId","kind":"scalar","type":"String"},{"name":"categoryId","kind":"scalar","type":"String"},{"name":"tutor","kind":"object","type":"TutorProfile","relationName":"TutorCategoryToTutorProfile"},{"name":"category","kind":"object","type":"Category","relationName":"CategoryToTutorCategory"}],"dbName":"tutor_categories"},"Availability":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"tutorId","kind":"scalar","type":"String"},{"name":"dayOfWeek","kind":"scalar","type":"Int"},{"name":"startTime","kind":"scalar","type":"String"},{"name":"endTime","kind":"scalar","type":"String"},{"name":"isBooked","kind":"scalar","type":"Boolean"},{"name":"tutor","kind":"object","type":"TutorProfile","relationName":"AvailabilityToTutorProfile"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"}],"dbName":"availability"},"Booking":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"studentId","kind":"scalar","type":"String"},{"name":"tutorId","kind":"scalar","type":"String"},{"name":"date","kind":"scalar","type":"DateTime"},{"name":"startTime","kind":"scalar","type":"String"},{"name":"endTime","kind":"scalar","type":"String"},{"name":"status","kind":"enum","type":"BookingStatus"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"},{"name":"student","kind":"object","type":"User","relationName":"StudentBookings"},{"name":"tutor","kind":"object","type":"TutorProfile","relationName":"TutorBookings"},{"name":"review","kind":"object","type":"Review","relationName":"BookingToReview"}],"dbName":"bookings"},"Review":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"studentId","kind":"scalar","type":"String"},{"name":"tutorId","kind":"scalar","type":"String"},{"name":"bookingId","kind":"scalar","type":"String"},{"name":"rating","kind":"scalar","type":"Int"},{"name":"comment","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"},{"name":"student","kind":"object","type":"User","relationName":"ReviewToUser"},{"name":"tutor","kind":"object","type":"TutorProfile","relationName":"ReviewToTutorProfile"},{"name":"booking","kind":"object","type":"Booking","relationName":"BookingToReview"}],"dbName":"reviews"},"User":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"name","kind":"scalar","type":"String"},{"name":"email","kind":"scalar","type":"String"},{"name":"emailVerified","kind":"scalar","type":"Boolean"},{"name":"image","kind":"scalar","type":"String"},{"name":"phone","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"},{"name":"sessions","kind":"object","type":"Session","relationName":"SessionToUser"},{"name":"accounts","kind":"object","type":"Account","relationName":"AccountToUser"},{"name":"role","kind":"enum","type":"Role"},{"name":"status","kind":"enum","type":"UserStatus"},{"name":"tutorProfile","kind":"object","type":"TutorProfile","relationName":"TutorProfileToUser"},{"name":"studentBookings","kind":"object","type":"Booking","relationName":"StudentBookings"},{"name":"reviews","kind":"object","type":"Review","relationName":"ReviewToUser"}],"dbName":"user"},"Session":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"expiresAt","kind":"scalar","type":"DateTime"},{"name":"token","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"},{"name":"ipAddress","kind":"scalar","type":"String"},{"name":"userAgent","kind":"scalar","type":"String"},{"name":"userId","kind":"scalar","type":"String"},{"name":"user","kind":"object","type":"User","relationName":"SessionToUser"}],"dbName":"session"},"Account":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"accountId","kind":"scalar","type":"String"},{"name":"providerId","kind":"scalar","type":"String"},{"name":"userId","kind":"scalar","type":"String"},{"name":"user","kind":"object","type":"User","relationName":"AccountToUser"},{"name":"accessToken","kind":"scalar","type":"String"},{"name":"refreshToken","kind":"scalar","type":"String"},{"name":"idToken","kind":"scalar","type":"String"},{"name":"accessTokenExpiresAt","kind":"scalar","type":"DateTime"},{"name":"refreshTokenExpiresAt","kind":"scalar","type":"DateTime"},{"name":"scope","kind":"scalar","type":"String"},{"name":"password","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"}],"dbName":"account"},"Verification":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"identifier","kind":"scalar","type":"String"},{"name":"value","kind":"scalar","type":"String"},{"name":"expiresAt","kind":"scalar","type":"DateTime"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"}],"dbName":"verification"}},"enums":{},"types":{}}');
+config.runtimeDataModel = JSON.parse('{"models":{"TutorProfile":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"userId","kind":"scalar","type":"String"},{"name":"bio","kind":"scalar","type":"String"},{"name":"pricePerHour","kind":"scalar","type":"Float"},{"name":"experience","kind":"scalar","type":"Float"},{"name":"rating","kind":"scalar","type":"Float"},{"name":"totalReviews","kind":"scalar","type":"Int"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"},{"name":"user","kind":"object","type":"User","relationName":"TutorProfileToUser"},{"name":"categories","kind":"object","type":"TutorCategory","relationName":"TutorCategoryToTutorProfile"},{"name":"availability","kind":"object","type":"Availability","relationName":"AvailabilityToTutorProfile"},{"name":"bookings","kind":"object","type":"Booking","relationName":"TutorBookings"},{"name":"reviews","kind":"object","type":"Review","relationName":"ReviewToTutorProfile"}],"dbName":"tutor_profiles"},"Category":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"name","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"},{"name":"tutors","kind":"object","type":"TutorCategory","relationName":"CategoryToTutorCategory"}],"dbName":"categories"},"TutorCategory":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"tutorId","kind":"scalar","type":"String"},{"name":"categoryId","kind":"scalar","type":"String"},{"name":"tutor","kind":"object","type":"TutorProfile","relationName":"TutorCategoryToTutorProfile"},{"name":"category","kind":"object","type":"Category","relationName":"CategoryToTutorCategory"}],"dbName":"tutor_categories"},"Availability":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"tutorId","kind":"scalar","type":"String"},{"name":"dayOfWeek","kind":"scalar","type":"Int"},{"name":"startTime","kind":"scalar","type":"String"},{"name":"endTime","kind":"scalar","type":"String"},{"name":"isBooked","kind":"scalar","type":"Boolean"},{"name":"tutor","kind":"object","type":"TutorProfile","relationName":"AvailabilityToTutorProfile"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"}],"dbName":"availability"},"Booking":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"studentId","kind":"scalar","type":"String"},{"name":"tutorId","kind":"scalar","type":"String"},{"name":"date","kind":"scalar","type":"DateTime"},{"name":"startTime","kind":"scalar","type":"String"},{"name":"endTime","kind":"scalar","type":"String"},{"name":"status","kind":"enum","type":"BookingStatus"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"},{"name":"student","kind":"object","type":"User","relationName":"StudentBookings"},{"name":"tutor","kind":"object","type":"TutorProfile","relationName":"TutorBookings"},{"name":"review","kind":"object","type":"Review","relationName":"BookingToReview"},{"name":"payment","kind":"object","type":"Payment","relationName":"BookingToPayment"}],"dbName":"bookings"},"Payment":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"bookingId","kind":"scalar","type":"String"},{"name":"amount","kind":"scalar","type":"Float"},{"name":"currency","kind":"scalar","type":"String"},{"name":"status","kind":"enum","type":"PaymentStatus"},{"name":"stripeSessionId","kind":"scalar","type":"String"},{"name":"stripePaymentId","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"},{"name":"booking","kind":"object","type":"Booking","relationName":"BookingToPayment"}],"dbName":"payments"},"Review":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"studentId","kind":"scalar","type":"String"},{"name":"tutorId","kind":"scalar","type":"String"},{"name":"bookingId","kind":"scalar","type":"String"},{"name":"rating","kind":"scalar","type":"Float"},{"name":"comment","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"},{"name":"student","kind":"object","type":"User","relationName":"ReviewToUser"},{"name":"tutor","kind":"object","type":"TutorProfile","relationName":"ReviewToTutorProfile"},{"name":"booking","kind":"object","type":"Booking","relationName":"BookingToReview"}],"dbName":"reviews"},"User":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"name","kind":"scalar","type":"String"},{"name":"email","kind":"scalar","type":"String"},{"name":"emailVerified","kind":"scalar","type":"Boolean"},{"name":"image","kind":"scalar","type":"String"},{"name":"phone","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"},{"name":"sessions","kind":"object","type":"Session","relationName":"SessionToUser"},{"name":"accounts","kind":"object","type":"Account","relationName":"AccountToUser"},{"name":"role","kind":"enum","type":"Role"},{"name":"status","kind":"enum","type":"UserStatus"},{"name":"tutorProfile","kind":"object","type":"TutorProfile","relationName":"TutorProfileToUser"},{"name":"studentBookings","kind":"object","type":"Booking","relationName":"StudentBookings"},{"name":"reviews","kind":"object","type":"Review","relationName":"ReviewToUser"}],"dbName":"user"},"Session":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"expiresAt","kind":"scalar","type":"DateTime"},{"name":"token","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"},{"name":"ipAddress","kind":"scalar","type":"String"},{"name":"userAgent","kind":"scalar","type":"String"},{"name":"userId","kind":"scalar","type":"String"},{"name":"user","kind":"object","type":"User","relationName":"SessionToUser"}],"dbName":"session"},"Account":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"accountId","kind":"scalar","type":"String"},{"name":"providerId","kind":"scalar","type":"String"},{"name":"userId","kind":"scalar","type":"String"},{"name":"user","kind":"object","type":"User","relationName":"AccountToUser"},{"name":"accessToken","kind":"scalar","type":"String"},{"name":"refreshToken","kind":"scalar","type":"String"},{"name":"idToken","kind":"scalar","type":"String"},{"name":"accessTokenExpiresAt","kind":"scalar","type":"DateTime"},{"name":"refreshTokenExpiresAt","kind":"scalar","type":"DateTime"},{"name":"scope","kind":"scalar","type":"String"},{"name":"password","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"}],"dbName":"account"},"Verification":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"identifier","kind":"scalar","type":"String"},{"name":"value","kind":"scalar","type":"String"},{"name":"expiresAt","kind":"scalar","type":"DateTime"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"}],"dbName":"verification"}},"enums":{},"types":{}}');
 async function decodeBase64AsWasm(wasmBase64) {
-  const { Buffer } = await import("buffer");
-  const wasmArray = Buffer.from(wasmBase64, "base64");
+  const { Buffer: Buffer2 } = await import("buffer");
+  const wasmArray = Buffer2.from(wasmBase64, "base64");
   return new WebAssembly.Module(wasmArray);
 }
 config.compilerWasm = {
@@ -48,12 +55,80 @@ function getPrismaClientClass() {
 }
 
 // generated/prisma/internal/prismaNamespace.ts
+var prismaNamespace_exports = {};
+__export(prismaNamespace_exports, {
+  AccountScalarFieldEnum: () => AccountScalarFieldEnum,
+  AnyNull: () => AnyNull2,
+  AvailabilityScalarFieldEnum: () => AvailabilityScalarFieldEnum,
+  BookingScalarFieldEnum: () => BookingScalarFieldEnum,
+  CategoryScalarFieldEnum: () => CategoryScalarFieldEnum,
+  DbNull: () => DbNull2,
+  Decimal: () => Decimal2,
+  JsonNull: () => JsonNull2,
+  ModelName: () => ModelName,
+  NullTypes: () => NullTypes2,
+  NullsOrder: () => NullsOrder,
+  PaymentScalarFieldEnum: () => PaymentScalarFieldEnum,
+  PrismaClientInitializationError: () => PrismaClientInitializationError2,
+  PrismaClientKnownRequestError: () => PrismaClientKnownRequestError2,
+  PrismaClientRustPanicError: () => PrismaClientRustPanicError2,
+  PrismaClientUnknownRequestError: () => PrismaClientUnknownRequestError2,
+  PrismaClientValidationError: () => PrismaClientValidationError2,
+  QueryMode: () => QueryMode,
+  ReviewScalarFieldEnum: () => ReviewScalarFieldEnum,
+  SessionScalarFieldEnum: () => SessionScalarFieldEnum,
+  SortOrder: () => SortOrder,
+  Sql: () => Sql2,
+  TransactionIsolationLevel: () => TransactionIsolationLevel,
+  TutorCategoryScalarFieldEnum: () => TutorCategoryScalarFieldEnum,
+  TutorProfileScalarFieldEnum: () => TutorProfileScalarFieldEnum,
+  UserScalarFieldEnum: () => UserScalarFieldEnum,
+  VerificationScalarFieldEnum: () => VerificationScalarFieldEnum,
+  defineExtension: () => defineExtension,
+  empty: () => empty2,
+  getExtensionContext: () => getExtensionContext,
+  join: () => join2,
+  prismaVersion: () => prismaVersion,
+  raw: () => raw2,
+  sql: () => sql
+});
 import * as runtime2 from "@prisma/client/runtime/client";
+var PrismaClientKnownRequestError2 = runtime2.PrismaClientKnownRequestError;
+var PrismaClientUnknownRequestError2 = runtime2.PrismaClientUnknownRequestError;
+var PrismaClientRustPanicError2 = runtime2.PrismaClientRustPanicError;
+var PrismaClientInitializationError2 = runtime2.PrismaClientInitializationError;
+var PrismaClientValidationError2 = runtime2.PrismaClientValidationError;
+var sql = runtime2.sqltag;
+var empty2 = runtime2.empty;
+var join2 = runtime2.join;
+var raw2 = runtime2.raw;
+var Sql2 = runtime2.Sql;
+var Decimal2 = runtime2.Decimal;
 var getExtensionContext = runtime2.Extensions.getExtensionContext;
+var prismaVersion = {
+  client: "7.3.0",
+  engine: "9d6ad21cbbceab97458517b147a6a09ff43aa735"
+};
 var NullTypes2 = {
   DbNull: runtime2.NullTypes.DbNull,
   JsonNull: runtime2.NullTypes.JsonNull,
   AnyNull: runtime2.NullTypes.AnyNull
+};
+var DbNull2 = runtime2.DbNull;
+var JsonNull2 = runtime2.JsonNull;
+var AnyNull2 = runtime2.AnyNull;
+var ModelName = {
+  TutorProfile: "TutorProfile",
+  Category: "Category",
+  TutorCategory: "TutorCategory",
+  Availability: "Availability",
+  Booking: "Booking",
+  Payment: "Payment",
+  Review: "Review",
+  User: "User",
+  Session: "Session",
+  Account: "Account",
+  Verification: "Verification"
 };
 var TransactionIsolationLevel = runtime2.makeStrictEnum({
   ReadUncommitted: "ReadUncommitted",
@@ -61,6 +136,127 @@ var TransactionIsolationLevel = runtime2.makeStrictEnum({
   RepeatableRead: "RepeatableRead",
   Serializable: "Serializable"
 });
+var TutorProfileScalarFieldEnum = {
+  id: "id",
+  userId: "userId",
+  bio: "bio",
+  pricePerHour: "pricePerHour",
+  experience: "experience",
+  rating: "rating",
+  totalReviews: "totalReviews",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt"
+};
+var CategoryScalarFieldEnum = {
+  id: "id",
+  name: "name",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt"
+};
+var TutorCategoryScalarFieldEnum = {
+  id: "id",
+  tutorId: "tutorId",
+  categoryId: "categoryId"
+};
+var AvailabilityScalarFieldEnum = {
+  id: "id",
+  tutorId: "tutorId",
+  dayOfWeek: "dayOfWeek",
+  startTime: "startTime",
+  endTime: "endTime",
+  isBooked: "isBooked",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt"
+};
+var BookingScalarFieldEnum = {
+  id: "id",
+  studentId: "studentId",
+  tutorId: "tutorId",
+  date: "date",
+  startTime: "startTime",
+  endTime: "endTime",
+  status: "status",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt"
+};
+var PaymentScalarFieldEnum = {
+  id: "id",
+  bookingId: "bookingId",
+  amount: "amount",
+  currency: "currency",
+  status: "status",
+  stripeSessionId: "stripeSessionId",
+  stripePaymentId: "stripePaymentId",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt"
+};
+var ReviewScalarFieldEnum = {
+  id: "id",
+  studentId: "studentId",
+  tutorId: "tutorId",
+  bookingId: "bookingId",
+  rating: "rating",
+  comment: "comment",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt"
+};
+var UserScalarFieldEnum = {
+  id: "id",
+  name: "name",
+  email: "email",
+  emailVerified: "emailVerified",
+  image: "image",
+  phone: "phone",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt",
+  role: "role",
+  status: "status"
+};
+var SessionScalarFieldEnum = {
+  id: "id",
+  expiresAt: "expiresAt",
+  token: "token",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt",
+  ipAddress: "ipAddress",
+  userAgent: "userAgent",
+  userId: "userId"
+};
+var AccountScalarFieldEnum = {
+  id: "id",
+  accountId: "accountId",
+  providerId: "providerId",
+  userId: "userId",
+  accessToken: "accessToken",
+  refreshToken: "refreshToken",
+  idToken: "idToken",
+  accessTokenExpiresAt: "accessTokenExpiresAt",
+  refreshTokenExpiresAt: "refreshTokenExpiresAt",
+  scope: "scope",
+  password: "password",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt"
+};
+var VerificationScalarFieldEnum = {
+  id: "id",
+  identifier: "identifier",
+  value: "value",
+  expiresAt: "expiresAt",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt"
+};
+var SortOrder = {
+  asc: "asc",
+  desc: "desc"
+};
+var QueryMode = {
+  default: "default",
+  insensitive: "insensitive"
+};
+var NullsOrder = {
+  first: "first",
+  last: "last"
+};
 var defineExtension = runtime2.Extensions.defineExtension;
 
 // generated/prisma/client.ts
@@ -69,22 +265,35 @@ var PrismaClient = getPrismaClientClass();
 
 // src/lib/prisma.ts
 var connectionString = `${process.env.DATABASE_URL}`;
-var adapter = new PrismaPg({ connectionString });
+var pool = new Pool({
+  connectionString,
+  max: 10,
+  idleTimeoutMillis: 3e4,
+  connectionTimeoutMillis: 15e3,
+  // Slightly more time
+  keepAlive: true,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+var adapter = new PrismaPg(pool);
 var prisma = new PrismaClient({ adapter });
 
 // src/lib/auth.ts
 import nodemailer from "nodemailer";
 var transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
+  host: process.env.EMAIL_SENDER_SMTP_HOST || "smtp.gmail.com",
+  port: Number(process.env.EMAIL_SENDER_SMTP_PORT) || 587,
+  secure: process.env.EMAIL_SENDER_SMTP_PORT === "465",
+  // true for 465, false for other ports
   auth: {
-    user: process.env.APP_USER,
-    pass: process.env.APP_PASS
+    user: process.env.EMAIL_SENDER_SMTP_USER || process.env.APP_USER,
+    pass: process.env.EMAIL_SENDER_SMTP_PASS || process.env.APP_PASS
   }
 });
 var auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL,
+  debug: true,
   database: prismaAdapter(prisma, { provider: "postgresql" }),
   trustedOrigins: [
     process.env.APP_URL,
@@ -116,44 +325,6 @@ var auth = betterAuth({
     }
     // disableCSRFCheck: true,
   },
-  // session: {
-  //   cookieCache: {
-  //     secure: true,
-  //     enabled: true,
-  //     maxAge: 5 * 60,
-  //     sameSite: "lax",
-  //     httpOnly: true,
-  //     path: "/",
-  //   },
-  // },
-  // advanced: {
-  //   useSecureCookies: true,
-  //   cookiePrefix: "__Secure-better-auth",
-  // },
-  // advanced: {
-  //   useSecureCookies: true,
-  //   defaultCookieAttributes: {
-  //     sameSite: "none",
-  //     secure: true,
-  //   },
-  //   // ADD THIS SECTION: Specifically target the 'state' cookie
-  //   cookies: {
-  //     state: {
-  //       attributes: {
-  //         sameSite: "none",
-  //         secure: true,
-  //       },
-  //     },
-  //   },
-  // },
-  // advanced: {
-  //   defaultCookieAttributes: {
-  //     sameSite: "lax",
-  //     secure: true,
-  //     httpOnly: true,
-  //     // partitioned: true,
-  //   },
-  // },
   emailAndPassword: {
     enabled: true,
     autoSignIn: false,
@@ -170,10 +341,6 @@ var auth = betterAuth({
       phone: {
         type: "string",
         required: false
-      },
-      image: {
-        type: "string",
-        required: false
       }
     }
   },
@@ -184,9 +351,9 @@ var auth = betterAuth({
     //after sign up automatic sign in app
     sendVerificationEmail: async ({ user, url, token }, request) => {
       try {
-        const verifationUrl = `${process.env.APP_URL}/verify-email?token=${token}`;
+        const verifationUrl = `${process.env.BETTER_AUTH_URL}/verify-email?token=${token}&callbackURL=${process.env.APP_URL}`;
         const info = await transporter.sendMail({
-          from: '"SkillBridge" <skillbridge@gmail.com>',
+          from: `"SkillBridge" <${process.env.EMAIL_SENDER_SMTP_FROM || process.env.APP_USER}>`,
           to: user.email,
           subject: "Please Verify Your Email!",
           html: `<!DOCTYPE html>
@@ -259,7 +426,6 @@ var auth = betterAuth({
 `
         });
       } catch (error) {
-        console.error(error);
         throw error;
       }
     }
@@ -532,28 +698,73 @@ async function getTutorDashboardStats(userId) {
       upcomingSessions: 0
     };
   }
+  const today = /* @__PURE__ */ new Date();
+  today.setHours(0, 0, 0, 0);
+  const globalBookings = await prisma.booking.findMany({ take: 5 });
+  console.log("DIAGNOSTIC: Global Bookings in DB:", globalBookings.map((b) => ({ id: b.id, tutorId: b.tutorId, studentId: b.studentId })));
   const bookings = await prisma.booking.findMany({
-    where: { tutorId: profile.userId }
+    where: { tutorId: profile.id },
+    include: {
+      student: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true
+        }
+      }
+    }
+  });
+  const allBookings = await prisma.booking.findMany({
+    where: { tutorId: profile.id }
+  });
+  console.log("DEBUG: Tutor Dashboard Profile ID:", profile.id);
+  console.log("DEBUG: Tutor Dashboard All Bookings Count:", allBookings.length);
+  console.log("DEBUG: Tutor Dashboard All Bookings Sample:", allBookings.slice(0, 2).map((b) => ({ id: b.id, status: b.status, date: b.date })));
+  const upcomingSessionsList = await prisma.booking.findMany({
+    where: {
+      tutorId: profile.id,
+      status: { in: ["CONFIRMED", "PENDING"] },
+      date: {
+        gte: today
+      }
+    },
+    include: {
+      student: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true
+        }
+      }
+    },
+    orderBy: {
+      date: "asc"
+    }
+  });
+  console.log("DEBUG: Tutor Dashboard Upcoming Sessions Found:", upcomingSessionsList.length);
+  const availability = await prisma.availability.findMany({
+    where: { tutorId: profile.id }
   });
   const reviews = await prisma.review.findMany({
-    where: { tutorId: profile.userId }
+    where: { tutorId: profile.id }
   });
   const totalReviews = reviews.length;
   const averageRating = totalReviews === 0 ? 0 : parseFloat(
     (reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews).toFixed(1)
   );
-  const upcomingSessions = bookings.filter(
-    (b) => new Date(b.date) > /* @__PURE__ */ new Date()
-  ).length;
   return {
     user: profile.user,
     profile,
     bookings,
     reviews,
+    availability,
     totalBookings: bookings.length,
     totalReviews,
     averageRating,
-    upcomingSessions
+    upcomingSessions: upcomingSessionsList.length,
+    upcomingSessionsList
   };
 }
 var getSingleTutorByUserId = async (userId) => {
@@ -591,129 +802,110 @@ var tutorServices = {
 };
 
 // src/modules/tutor/tutor.controller.ts
-var createTutorProfile2 = async (req, res) => {
+var createTutorProfile2 = async (req, res, next) => {
   try {
     const user = req.user;
     if (!user) {
-      return res.status(401).json({ message: "Unauthorized" });
+      const err = new Error("Unauthorized");
+      err.name = "UnauthorizedError";
+      throw err;
     }
     if (user.role === "TUTOR" /* TUTOR */) {
-      return res.status(400).json({
-        success: false,
-        message: "You are already a tutor"
-      });
+      const err = new Error("You are already a tutor");
+      err.name = "ConflictError";
+      throw err;
     }
-    const tutorProfile = await tutorServices.createTutorProfile(
-      req.body,
-      user.id
-    );
+    const tutorProfile = await tutorServices.createTutorProfile(req.body, user.id);
     await prisma.user.update({
       where: { id: user.id },
       data: { role: "TUTOR" /* TUTOR */ }
     });
-    return res.status(201).json({
+    res.status(201).json({
       success: true,
       data: tutorProfile
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    next(error);
   }
 };
-var getAllTutors2 = async (req, res) => {
+var getAllTutors2 = async (req, res, next) => {
   try {
     const result = await tutorServices.getAllTutors();
-    res.status(200).json({
-      success: true,
-      data: result
-    });
+    res.status(200).json({ success: true, data: result });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch staff"
-    });
+    next(error);
   }
 };
-var getSingleTutor2 = async (req, res) => {
+var getSingleTutor2 = async (req, res, next) => {
   try {
     const { id: userId } = req.params;
     const result = await tutorServices.getSingleTutor(userId);
     if (!result) {
-      return res.status(404).json({
-        success: false,
-        message: "Tutor not found"
-      });
+      const err = new Error("Tutor not found");
+      err.name = "NotFoundError";
+      throw err;
     }
-    return res.status(200).json({
-      success: true,
-      data: result
-    });
+    res.status(200).json({ success: true, data: result });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch tutor"
-    });
+    next(error);
   }
 };
-var updateTutorProfile2 = async (req, res) => {
+var updateTutorProfile2 = async (req, res, next) => {
   try {
     const user = req.user;
-    if (!user) return res.status(401).json({ message: "Unauthorized" });
-    const data = req.body;
-    const updatedProfile = await tutorServices.updateTutorProfile(user.id, data);
-    return res.status(200).json({ success: true, data: updatedProfile });
+    if (!user) {
+      const err = new Error("Unauthorized");
+      err.name = "UnauthorizedError";
+      throw err;
+    }
+    const updatedProfile = await tutorServices.updateTutorProfile(user.id, req.body);
+    res.status(200).json({ success: true, data: updatedProfile });
   } catch (error) {
-    console.error("UpdateTutorProfile error:", error);
-    return res.status(400).json({
-      success: false,
-      message: error.message || "Failed to update tutor profile"
-    });
+    next(error);
   }
 };
-var deleteTutorProfile2 = async (req, res) => {
+var deleteTutorProfile2 = async (req, res, next) => {
   try {
     const { id } = req.params;
     const result = await tutorServices.deleteTutorProfile(id);
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       message: "Tutor profile deleted successfully",
       data: result
     });
   } catch (error) {
-    return res.status(400).json({
-      success: false,
-      message: error.message || "Failed to delete tutor profile"
-    });
+    next(error);
   }
 };
-var getTutorDashboardStats2 = async (req, res) => {
+var getTutorDashboardStats2 = async (req, res, next) => {
   try {
     const { id } = req.params;
     const stats = await tutorServices.getTutorDashboardStats(id);
-    return res.status(200).json({ success: true, data: stats });
+    res.status(200).json({ success: true, data: stats });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    next(error);
   }
 };
-var getTutorByUserId = async (req, res) => {
+var getTutorByUserId = async (req, res, next) => {
   try {
     const { userId } = req.params;
     const tutor = await tutorServices.getSingleTutorByUserId(userId);
-    if (!tutor)
-      return res.status(404).json({ success: false, message: "Tutor not found" });
+    if (!tutor) {
+      const err = new Error("Tutor not found");
+      err.name = "NotFoundError";
+      throw err;
+    }
     res.status(200).json({ success: true, data: tutor });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    next(error);
   }
 };
-var getTopRatedTutor2 = async (req, res) => {
+var getTopRatedTutor2 = async (req, res, next) => {
   try {
     const result = await tutorServices.getTopRatedTutor();
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    next(error);
   }
 };
 var tutorController = {
@@ -769,20 +961,6 @@ var getAllCategory = async () => {
       name: true,
       createdAt: true,
       updatedAt: true,
-      // tutors: {
-      //   select: {
-      //     tutor: {
-      //       select: {
-      //         id: true,
-      //         userId: true,
-      //         bio: true,
-      //         pricePerHour: true,
-      //         experience: true,
-      //         rating: true,
-      //       },
-      //     },
-      //   },
-      // },
       tutors: {
         select: {
           tutor: {
@@ -893,7 +1071,7 @@ var categoryServices = {
 };
 
 // src/modules/categories/categories.controller.ts
-var createCategories2 = async (req, res) => {
+var createCategories2 = async (req, res, next) => {
   try {
     const result = await categoryServices.createCategories(req.body);
     return res.status(201).json({
@@ -901,14 +1079,10 @@ var createCategories2 = async (req, res) => {
       data: result
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to create category",
-      error: error.message
-    });
+    next(error);
   }
 };
-var getAllCategory2 = async (req, res) => {
+var getAllCategory2 = async (req, res, next) => {
   try {
     const result = await categoryServices.getAllCategory();
     res.status(200).json({
@@ -916,13 +1090,10 @@ var getAllCategory2 = async (req, res) => {
       data: result
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch all category data"
-    });
+    next(error);
   }
 };
-var getSingleCategory2 = async (req, res) => {
+var getSingleCategory2 = async (req, res, next) => {
   try {
     const { id } = req.params;
     const result = await categoryServices.getSingleCategory(id);
@@ -931,44 +1102,32 @@ var getSingleCategory2 = async (req, res) => {
       data: result
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch category"
-    });
+    next(error);
   }
 };
-var updateCategory2 = async (req, res) => {
+var updateCategory2 = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { name, tutorIds } = req.body;
-    const result = await categoryServices.updateCategory(id, {
-      name,
-      tutorIds
-    });
+    const result = await categoryServices.updateCategory(id, { name, tutorIds });
     res.status(200).json({
       success: true,
       data: result
     });
   } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: error.message
-    });
+    next(error);
   }
 };
-var deleteCategory2 = async (req, res) => {
+var deleteCategory2 = async (req, res, next) => {
   try {
     const { id } = req.params;
     const result = await categoryServices.deleteCategory(id);
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       data: result
     });
   } catch (error) {
-    return res.status(400).json({
-      success: false,
-      message: error.message || "Failed to delete category"
-    });
+    next(error);
   }
 };
 var categoryController = {
@@ -1123,7 +1282,7 @@ var availabilityServices = {
 };
 
 // src/modules/availability/availability.controller.ts
-var createAvailability2 = async (req, res) => {
+var createAvailability2 = async (req, res, next) => {
   try {
     const tutorId = req.user?.tutorProfileId;
     if (!tutorId) {
@@ -1132,108 +1291,60 @@ var createAvailability2 = async (req, res) => {
     const result = await availabilityServices.createAvailability(req.body, tutorId);
     res.status(201).json({ success: true, data: result });
   } catch (error) {
-    console.error("Create availability error:", error.message);
-    res.status(500).json({
-      success: false,
-      message: "Failed to create availability",
-      error: error.message
-    });
+    next(error);
   }
 };
-var getAllAvailabilty2 = async (Req, res) => {
+var getAllAvailabilty2 = async (_req, res, next) => {
   try {
     const result = await availabilityServices.getAllAvailabilty();
-    res.status(200).json({
-      success: true,
-      data: result
-    });
+    res.status(200).json({ success: true, data: result });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch Availabilty"
-    });
+    next(error);
   }
 };
-var getSingleAvailability2 = async (req, res) => {
+var getSingleAvailability2 = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const result = await availabilityServices.getSingleAvailability(
-      id
-    );
-    res.status(200).json({
-      success: true,
-      data: result
-    });
+    const result = await availabilityServices.getSingleAvailability(id);
+    res.status(200).json({ success: true, data: result });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch Availabilty"
-    });
+    next(error);
   }
 };
-var updateAvailability2 = async (req, res) => {
+var updateAvailability2 = async (req, res, next) => {
   try {
     if (Object.keys(req.body).length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "No data provided to update"
-      });
+      return res.status(400).json({ success: false, message: "No data provided to update" });
     }
     const { id } = req.params;
-    const result = await availabilityServices.updateAvailability(
-      id,
-      req.body
-    );
-    res.status(200).json({
-      success: true,
-      data: result
-    });
+    const result = await availabilityServices.updateAvailability(id, req.body);
+    res.status(200).json({ success: true, data: result });
   } catch (error) {
-    console.error("Update availability error:", error.message);
-    return res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    next(error);
   }
 };
-var deleteAvailability2 = async (req, res) => {
+var deleteAvailability2 = async (req, res, next) => {
   try {
     const { id } = req.params;
     const result = await availabilityServices.deleteAvailability(id);
-    res.status(200).json({
-      success: true,
-      data: result
-    });
+    res.status(200).json({ success: true, data: result });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to delete Availabilty"
-    });
+    next(error);
   }
 };
-var getAvailabilityByTutor2 = async (req, res) => {
+var getAvailabilityByTutor2 = async (req, res, next) => {
   try {
     let tutorId = req.params.tutorId;
     if (!tutorId) {
-      return res.status(400).json({
-        success: false,
-        message: "Tutor ID is required"
-      });
+      return res.status(400).json({ success: false, message: "Tutor ID is required" });
     }
     const result = await availabilityServices.getAvailabilityByTutor(tutorId);
-    res.status(200).json({
-      success: true,
-      data: result
-    });
+    res.status(200).json({ success: true, data: result });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch tutor availability"
-    });
+    next(error);
   }
 };
-var getMyAvailability = async (req, res) => {
+var getMyAvailability = async (req, res, next) => {
   try {
     const tutorId = req.user?.tutorProfileId;
     if (!tutorId) {
@@ -1242,11 +1353,7 @@ var getMyAvailability = async (req, res) => {
     const result = await availabilityServices.getAvailabilityByTutor(tutorId);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch availability"
-    });
+    next(error);
   }
 };
 var availabiltyController = {
@@ -1453,57 +1560,38 @@ var bookingServices = {
 };
 
 // src/modules/bookings/bookings.controller.ts
-var createBooking2 = async (req, res) => {
+var createBooking2 = async (req, res, next) => {
   try {
     const studentId = req.user.id;
     const result = await bookingServices.createBooking(studentId, {
       tutorId: req.body.tutorId,
       date: new Date(req.body.date),
-      // convert string to Date
       startTime: req.body.startTime,
       endTime: req.body.endTime
     });
-    res.status(201).json({
-      success: true,
-      data: result
-    });
+    res.status(201).json({ success: true, data: result });
   } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: error.message
-    });
+    next(error);
   }
 };
-var getAllBookings2 = async (_req, res) => {
+var getAllBookings2 = async (_req, res, next) => {
   try {
     const result = await bookingServices.getAllBookings();
-    res.status(200).json({
-      success: true,
-      data: result
-    });
+    res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    next(error);
   }
 };
-var getBookingById2 = async (req, res) => {
+var getBookingById2 = async (req, res, next) => {
   try {
     const { id } = req.params;
     const result = await bookingServices.getBookingById(id);
-    res.status(200).json({
-      success: true,
-      data: result
-    });
+    res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(404).json({
-      success: false,
-      message: error.message
-    });
+    next(error);
   }
 };
-var updateBooking2 = async (req, res) => {
+var updateBooking2 = async (req, res, next) => {
   try {
     const { id } = req.params;
     const user = req.user;
@@ -1525,48 +1613,36 @@ var updateBooking2 = async (req, res) => {
     const result = await bookingServices.updateBooking(id, req.body);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
+    next(error);
   }
 };
-var deleteBooking2 = async (req, res) => {
+var deleteBooking2 = async (req, res, next) => {
   try {
     const { id } = req.params;
     const result = await bookingServices.deleteBooking(id);
-    res.status(200).json({
-      success: true,
-      data: result
-    });
+    res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: error.message
-    });
+    next(error);
   }
 };
-var getBookingsByTutor2 = async (req, res) => {
+var getBookingsByTutor2 = async (req, res, next) => {
   try {
     const { id } = req.params;
     const bookings = await bookingServices.getBookingsByTutor(id);
-    return res.status(200).json({ success: true, data: bookings });
+    res.status(200).json({ success: true, data: bookings });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    next(error);
   }
 };
-var getUpcomingBookingsByTutor2 = async (req, res) => {
+var getUpcomingBookingsByTutor2 = async (req, res, next) => {
   try {
-    let tutorId = req.params.id;
-    if (Array.isArray(tutorId)) {
-      tutorId = tutorId[0];
-    }
-    if (!tutorId) {
-      return res.status(400).json({ success: false, message: "Tutor ID is required" });
-    }
+    let tutorId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    if (!tutorId) return res.status(400).json({ success: false, message: "Tutor ID is required" });
     const today = /* @__PURE__ */ new Date();
     today.setHours(0, 0, 0, 0);
     const bookings = await prisma.booking.findMany({
       where: {
         tutorId,
-        // ✅ now TypeScript is happy
         date: { gte: today },
         status: { in: ["CONFIRMED", "PENDING"] }
       },
@@ -1574,12 +1650,11 @@ var getUpcomingBookingsByTutor2 = async (req, res) => {
       orderBy: [{ date: "asc" }, { startTime: "asc" }]
     });
     res.json({ success: true, data: bookings });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Failed to fetch upcoming bookings" });
+  } catch (error) {
+    next(error);
   }
 };
-var getMyBookings = async (req, res) => {
+var getMyBookings = async (req, res, next) => {
   try {
     const studentId = req.user.id;
     const bookings = await prisma.booking.findMany({
@@ -1597,36 +1672,27 @@ var getMyBookings = async (req, res) => {
       orderBy: { date: "asc" }
     });
     res.json({ success: true, data: bookings });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Failed to fetch bookings" });
+  } catch (error) {
+    next(error);
   }
 };
-var getTutorPublicBookings = async (req, res) => {
-  let tutorId = req.params.id;
-  if (Array.isArray(tutorId)) {
-    tutorId = tutorId[0];
+var getTutorPublicBookings = async (req, res, next) => {
+  try {
+    let tutorId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    if (!tutorId) return res.status(400).json({ success: false, message: "Tutor ID is required" });
+    const bookings = await prisma.booking.findMany({
+      where: {
+        tutorId,
+        status: { in: ["PENDING", "CONFIRMED"] },
+        date: { gte: /* @__PURE__ */ new Date() }
+      },
+      select: { id: true, date: true, startTime: true, endTime: true, status: true },
+      orderBy: { date: "asc" }
+    });
+    res.json({ success: true, data: bookings });
+  } catch (error) {
+    next(error);
   }
-  if (!tutorId) {
-    return res.status(400).json({ success: false, message: "Tutor ID is required" });
-  }
-  const bookings = await prisma.booking.findMany({
-    where: {
-      tutorId,
-      status: { in: ["PENDING", "CONFIRMED"] },
-      // only blocking ones
-      date: { gte: /* @__PURE__ */ new Date() }
-    },
-    select: {
-      id: true,
-      date: true,
-      startTime: true,
-      endTime: true,
-      status: true
-    },
-    orderBy: { date: "asc" }
-  });
-  res.json({ data: bookings });
 };
 var bookingController = {
   createBooking: createBooking2,
@@ -1747,7 +1813,7 @@ var reviewServices = {
 };
 
 // src/modules/review/review.controller.ts
-var createReview2 = async (req, res) => {
+var createReview2 = async (req, res, next) => {
   try {
     const result = await reviewServices.createReview(req.body);
     res.status(201).json({
@@ -1755,14 +1821,10 @@ var createReview2 = async (req, res) => {
       data: result
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to create review",
-      error: error.message
-    });
+    next(error);
   }
 };
-var getReviews2 = async (req, res) => {
+var getReviews2 = async (req, res, next) => {
   try {
     const { tutorId, studentId } = req.query;
     const reviews = await reviewServices.getReviews(
@@ -1774,13 +1836,10 @@ var getReviews2 = async (req, res) => {
       data: reviews
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    next(error);
   }
 };
-var updateReview2 = async (req, res) => {
+var updateReview2 = async (req, res, next) => {
   try {
     const { id } = req.params;
     const updatedReview = await reviewServices.updateReview(id, req.body);
@@ -1789,13 +1848,10 @@ var updateReview2 = async (req, res) => {
       data: updatedReview
     });
   } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: error.message
-    });
+    next(error);
   }
 };
-var deleteReview2 = async (req, res) => {
+var deleteReview2 = async (req, res, next) => {
   try {
     const { id } = req.params;
     await reviewServices.deleteReview(id);
@@ -1804,19 +1860,16 @@ var deleteReview2 = async (req, res) => {
       message: "Review deleted successfully"
     });
   } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: error.message
-    });
+    next(error);
   }
 };
-var getReviewsByTutor2 = async (req, res) => {
+var getReviewsByTutor2 = async (req, res, next) => {
   try {
     const { id } = req.params;
     const reviews = await reviewServices.getReviewsByTutor(id);
-    return res.status(200).json({ success: true, data: reviews });
+    res.status(200).json({ success: true, data: reviews });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    next(error);
   }
 };
 var reviewController = {
@@ -1889,7 +1942,7 @@ var tutorCategoryServices = {
 };
 
 // src/modules/tutorCategory/tutorCategory.controller.ts
-var createTutorCategory = async (req, res) => {
+var createTutorCategory = async (req, res, next) => {
   try {
     const result = await tutorCategoryServices.addTutorToCategory(req.body);
     res.status(201).json({
@@ -1897,13 +1950,10 @@ var createTutorCategory = async (req, res) => {
       data: result
     });
   } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: error.message
-    });
+    next(error);
   }
 };
-var getTutorCategories2 = async (req, res) => {
+var getTutorCategories2 = async (req, res, next) => {
   try {
     const { tutorId, categoryId } = req.query;
     const result = await tutorCategoryServices.getTutorCategories(
@@ -1915,25 +1965,21 @@ var getTutorCategories2 = async (req, res) => {
       data: result
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    next(error);
   }
 };
-var deleteTutorCategory = async (req, res) => {
+var deleteTutorCategory = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const result = await tutorCategoryServices.removeTutorFromCategory(id);
+    const result = await tutorCategoryServices.removeTutorFromCategory(
+      id
+    );
     res.status(200).json({
       success: true,
       data: result
     });
   } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: error.message
-    });
+    next(error);
   }
 };
 var tutorCategoryController = {
@@ -2051,101 +2097,62 @@ var adminServices = {
 };
 
 // src/modules/admin/admin.controller.ts
-var getAllUsers2 = async (req, res) => {
+var getAllUsers2 = async (_req, res, next) => {
   try {
     const users = await adminServices.getAllUsers();
-    res.status(200).json({
-      success: true,
-      data: users
-    });
+    res.status(200).json({ success: true, data: users });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    next(error);
   }
 };
-var updateUser2 = async (req, res) => {
+var updateUser2 = async (req, res, next) => {
   try {
     const { id } = req.params;
     const result = await adminServices.updateUser(id, req.body);
-    res.status(200).json({
-      success: true,
-      data: result
-    });
+    res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: error.message
-    });
+    next(error);
   }
 };
-var getAllTutor2 = async (req, res) => {
+var getAllTutor2 = async (_req, res, next) => {
   try {
     const staff = await adminServices.getAllTutor();
-    res.status(200).json({
-      success: true,
-      data: staff
-    });
+    res.status(200).json({ success: true, data: staff });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    next(error);
   }
 };
-var getAllBookings4 = async (req, res) => {
+var getAllBookings4 = async (_req, res, next) => {
   try {
     const bookings = await adminServices.getAllBookings();
-    res.status(200).json({
-      success: true,
-      data: bookings
-    });
+    res.status(200).json({ success: true, data: bookings });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    next(error);
   }
 };
-var createCategory2 = async (req, res) => {
+var createCategory2 = async (req, res, next) => {
   try {
     const result = await adminServices.createCategory(req.body);
-    res.status(201).json({
-      success: true,
-      data: result
-    });
+    res.status(201).json({ success: true, data: result });
   } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: error.message
-    });
+    next(error);
   }
 };
-var updateCategory4 = async (req, res) => {
+var updateCategory4 = async (req, res, next) => {
   try {
     const { id } = req.params;
     const result = await adminServices.updateCategory(id, req.body);
-    res.status(200).json({
-      success: true,
-      data: result
-    });
+    res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: error.message
-    });
+    next(error);
   }
 };
-var getDashboardStats2 = async (req, res) => {
+var getDashboardStats2 = async (_req, res, next) => {
   try {
     const stats = await adminServices.getDashboardStats();
     res.status(200).json({ success: true, data: stats });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message || "Failed to fetch dashboard stats"
-    });
+    next(error);
   }
 };
 var adminController = {
@@ -2211,7 +2218,7 @@ var adminAnalyticsServices = {
 };
 
 // src/modules/adminAnalytic/adminAnalytic.controller.ts
-var getDashboardData2 = async (req, res) => {
+var getDashboardData2 = async (req, res, next) => {
   try {
     const result = await adminAnalyticsServices.getDashboardData();
     res.status(200).json({
@@ -2219,13 +2226,10 @@ var getDashboardData2 = async (req, res) => {
       data: result
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    next(error);
   }
 };
-var getStats2 = async (req, res) => {
+var getStats2 = async (req, res, next) => {
   try {
     const result = await adminAnalyticsServices.getStats();
     res.status(200).json({
@@ -2233,10 +2237,7 @@ var getStats2 = async (req, res) => {
       data: result
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    next(error);
   }
 };
 var adminAnalyticsController = {
@@ -2336,49 +2337,48 @@ var usersServices = {
 };
 
 // src/modules/users/user.controller.ts
-var getAllUsers4 = async (_req, res) => {
+var getAllUsers4 = async (_req, res, next) => {
   try {
     const users = await usersServices.getAllUsers();
     res.status(200).json({ success: true, data: users });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    next(error);
   }
 };
-var getUserById2 = async (req, res) => {
+var getUserById2 = async (req, res, next) => {
   try {
     const { id } = req.params;
     const user = await usersServices.getUserById(id);
     res.status(200).json({ success: true, data: user });
   } catch (error) {
-    res.status(404).json({ success: false, message: error.message });
+    next(error);
   }
 };
-var getCurrentUser2 = async (req, res) => {
+var getCurrentUser2 = async (req, res, next) => {
   try {
     const user = req.user;
     if (!user) {
-      throw new Error("User not found!");
+      const err = new Error("User not found!");
+      err.name = "NotFoundError";
+      throw err;
     }
     const result = await usersServices.getCurrentUser(user.id);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(404).json({ success: false, message: error.message });
+    next(error);
   }
 };
-var updateUserStatus2 = async (req, res) => {
+var updateUserStatus2 = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    const updatedUser = await usersServices.updateUserStatus(
-      id,
-      status
-    );
+    const updatedUser = await usersServices.updateUserStatus(id, status);
     res.status(200).json({ success: true, data: updatedUser });
   } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
+    next(error);
   }
 };
-var updateUserProfile2 = async (req, res) => {
+var updateUserProfile2 = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { name, email, image, phone } = req.body;
@@ -2390,7 +2390,7 @@ var updateUserProfile2 = async (req, res) => {
     });
     res.status(200).json({ success: true, data: updatedUser });
   } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
+    next(error);
   }
 };
 var usersController = {
@@ -2436,19 +2436,27 @@ var authServices = {
 };
 
 // src/modules/auth/auth.controller.ts
-var getMe = async (req, res) => {
-  if (!req.user) {
-    return res.status(401).json({ success: false, message: "Unauthorized" });
+var getMe = async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+    const user = await authServices.getMe(req.user);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    res.status(200).json({ success: true, data: user });
+  } catch (error) {
+    next(error);
   }
-  const user = await authServices.getMe(req.user);
-  if (!user) {
-    return res.status(404).json({ success: false, message: "User not found" });
-  }
-  return res.status(200).json({ success: true, data: user });
 };
-var signOut = async (req, res) => {
-  await authServices.signOut(req.headers);
-  return res.status(200).json({ success: true, message: "Logged out successfully" });
+var signOut = async (req, res, next) => {
+  try {
+    await authServices.signOut(req.headers);
+    res.status(200).json({ success: true, message: "Logged out successfully" });
+  } catch (error) {
+    next(error);
+  }
 };
 var authController = {
   getMe,
@@ -2464,11 +2472,473 @@ router10.get("/tutor-only", auth2("TUTOR" /* TUTOR */), (req, res) => {
 });
 var authRouter = router10;
 
+// src/modules/payments/payment.routes.ts
+import express11 from "express";
+
+// src/lib/stripe.ts
+import Stripe from "stripe";
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error("STRIPE_SECRET_KEY is not defined in environment variables");
+}
+var stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: "2025-01-27.acacia"
+  // Using the latest or desired version
+});
+
+// src/modules/payments/payment.services.ts
+var createCheckoutSession = async (bookingId, studentEmail) => {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: {
+      tutor: {
+        include: {
+          user: true
+        }
+      }
+    }
+  });
+  if (!booking) {
+    throw new Error("Booking not found");
+  }
+  const tutorName = booking.tutor.user.name;
+  const pricePerHour = booking.tutor.pricePerHour;
+  const toMinutes2 = (time) => {
+    time = time.trim();
+    const match24 = time.match(/^([01]?\d|2[0-3]):([0-5]\d)$/);
+    if (match24) {
+      const h = Number(match24[1]);
+      const m = Number(match24[2]);
+      return h * 60 + m;
+    }
+    const match12 = time.match(/^(\d{1,2}):([0-5]\d)\s?(AM|PM)$/i);
+    if (match12 && match12[1] && match12[2] && match12[3]) {
+      const h = Number(match12[1]);
+      const m = Number(match12[2]);
+      const period = match12[3].toUpperCase();
+      let hours = h === 12 ? 0 : h;
+      if (period === "PM") hours += 12;
+      return hours * 60 + m;
+    }
+    throw new Error(`Invalid time format: ${time}`);
+  };
+  const startMin = toMinutes2(booking.startTime);
+  const endMin = toMinutes2(booking.endTime);
+  const durationHours = (endMin - startMin) / 60;
+  console.log("DEBUG: Initializing checkout", { pricePerHour, startMin, endMin, durationHours });
+  const totalAmount = Math.round(pricePerHour * durationHours * 100);
+  if (isNaN(totalAmount) || totalAmount < 50) {
+    throw new Error(`Invalid payment amount: $${(totalAmount / 100).toFixed(2)}. Minimum allowed is $0.50.`);
+  }
+  const session = await stripe.checkout.sessions.create({
+    payment_method_types: ["card"],
+    line_items: [
+      {
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: `Tutoring Session with ${tutorName}`,
+            description: `Session on ${booking.date.toDateString()} from ${booking.startTime} to ${booking.endTime}`
+          },
+          unit_amount: totalAmount
+        },
+        quantity: 1
+      }
+    ],
+    mode: "payment",
+    success_url: `${process.env.APP_URL}/dashboard?success=true&session_id={CHECKOUT_SESSION_ID}&bookingId=${bookingId}`,
+    cancel_url: `${process.env.APP_URL}/dashboard?cancelled=true`,
+    customer_email: studentEmail,
+    metadata: {
+      bookingId
+    }
+  });
+  try {
+    await prisma.payment.upsert({
+      where: { bookingId },
+      update: {
+        stripeSessionId: session.id,
+        amount: pricePerHour * durationHours,
+        status: "PENDING"
+      },
+      create: {
+        bookingId,
+        amount: pricePerHour * durationHours,
+        currency: "usd",
+        status: "PENDING",
+        stripeSessionId: session.id
+      }
+    });
+  } catch (dbError) {
+    console.error("Payment Record DB Error:", dbError);
+    throw new Error(`Could not save payment record: ${dbError.message}`);
+  }
+  return { url: session.url };
+};
+var handleWebhook = async (sig, payload) => {
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(
+      payload,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+  } catch (err) {
+    throw new Error(`Webhook Error: ${err.message}`);
+  }
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object;
+    const bookingId = session.metadata.bookingId;
+    await prisma.$transaction([
+      prisma.payment.update({
+        where: { bookingId },
+        data: {
+          status: "SUCCESS",
+          stripePaymentId: session.payment_intent
+        }
+      }),
+      prisma.booking.update({
+        where: { id: bookingId },
+        data: {
+          status: "CONFIRMED"
+        }
+      })
+    ]);
+  }
+  return { received: true };
+};
+var verifyPayment = async (sessionId, bookingId) => {
+  try {
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    if (session.payment_status === "paid") {
+      await prisma.payment.upsert({
+        where: { bookingId },
+        update: {
+          status: "SUCCESS",
+          stripePaymentId: session.payment_intent
+        },
+        create: {
+          bookingId,
+          amount: (session.amount_total || 0) / 100,
+          currency: "usd",
+          status: "SUCCESS",
+          stripeSessionId: sessionId,
+          stripePaymentId: session.payment_intent
+        }
+      });
+      await prisma.booking.update({
+        where: { id: bookingId },
+        data: {
+          status: "CONFIRMED"
+        }
+      });
+      return { success: true, message: "Payment verified and updated" };
+    }
+    return { success: false, message: "Payment not completed yet" };
+  } catch (error) {
+    throw new Error(`Verify Error: ${error.message}`);
+  }
+};
+var getAllPayments = async () => {
+  return await prisma.payment.findMany({
+    include: {
+      booking: {
+        include: {
+          student: true,
+          tutor: {
+            include: {
+              user: true
+            }
+          }
+        }
+      }
+    },
+    orderBy: {
+      createdAt: "desc"
+    }
+  });
+};
+var paymentServices = {
+  createCheckoutSession,
+  handleWebhook,
+  verifyPayment,
+  getAllPayments
+};
+
+// src/modules/payments/payment.controller.ts
+var createCheckoutSession2 = async (req, res) => {
+  try {
+    const { bookingId } = req.body;
+    const user = req.user;
+    if (!user || !user.email) {
+      return res.status(401).json({ message: "Unauthenticated" });
+    }
+    const result = await paymentServices.createCheckoutSession(bookingId, user.email);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+var handleWebhook2 = async (req, res) => {
+  const sig = req.headers["stripe-signature"];
+  const payload = req.body;
+  try {
+    const result = await paymentServices.handleWebhook(sig, payload);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(400).send(`Webhook Error: ${error.message}`);
+  }
+};
+var verifyPayment2 = async (req, res) => {
+  try {
+    const { sessionId, bookingId } = req.body;
+    const result = await paymentServices.verifyPayment(sessionId, bookingId);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+var getAllPayments2 = async (req, res) => {
+  try {
+    const result = await paymentServices.getAllPayments();
+    res.status(200).json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+var paymentController = {
+  createCheckoutSession: createCheckoutSession2,
+  handleWebhook: handleWebhook2,
+  verifyPayment: verifyPayment2,
+  getAllPayments: getAllPayments2
+};
+
+// src/modules/payments/payment.routes.ts
+var router11 = express11.Router();
+router11.post("/create-checkout-session", auth2("STUDENT" /* STUDENT */), paymentController.createCheckoutSession);
+router11.post("/webhook", paymentController.handleWebhook);
+router11.post("/verify", auth2("STUDENT" /* STUDENT */), paymentController.verifyPayment);
+router11.get("/", auth2("ADMIN" /* ADMIN */), paymentController.getAllPayments);
+var paymentRouter = router11;
+
+// src/middleware/globalErrorHandler.ts
+function errorHandler(err, req, res, next) {
+  let statusCode = 500;
+  let errorMessage = "Internal server error!!";
+  let errorDetails = err;
+  if (err instanceof prismaNamespace_exports.PrismaClientKnownRequestError) {
+    switch (err.code) {
+      case "P2000":
+        statusCode = 400;
+        errorMessage = "The provided value is too long for the column type.";
+        break;
+      case "P2001":
+        statusCode = 404;
+        errorMessage = "The record searched for in the where condition does not exist.";
+        break;
+      case "P2002":
+        statusCode = 409;
+        errorMessage = `Unique constraint failed on the ${err.meta?.target || "constraint"}.`;
+        errorDetails = { field: err.meta?.target };
+        break;
+      case "P2003":
+        statusCode = 409;
+        errorMessage = "Foreign key constraint failed.";
+        errorDetails = { field: err.meta?.field_name };
+        break;
+      case "P2004":
+        statusCode = 400;
+        errorMessage = "A constraint failed on the database.";
+        break;
+      case "P2005":
+        statusCode = 400;
+        errorMessage = `The value stored in the database is invalid for the field type.`;
+        break;
+      case "P2006":
+        statusCode = 400;
+        errorMessage = "The provided value is not valid.";
+        break;
+      case "P2007":
+        statusCode = 400;
+        errorMessage = "Data validation error.";
+        break;
+      case "P2008":
+        statusCode = 400;
+        errorMessage = "Failed to parse the query.";
+        break;
+      case "P2009":
+        statusCode = 400;
+        errorMessage = "Failed to validate the query.";
+        break;
+      case "P2010":
+        statusCode = 400;
+        errorMessage = "Raw query failed.";
+        break;
+      case "P2011":
+        statusCode = 400;
+        errorMessage = "Null constraint violation.";
+        break;
+      case "P2012":
+        statusCode = 400;
+        errorMessage = "Missing a required value.";
+        break;
+      case "P2013":
+        statusCode = 400;
+        errorMessage = "Missing a required argument.";
+        break;
+      case "P2014":
+        statusCode = 409;
+        errorMessage = "A required relation would be violated.";
+        break;
+      case "P2015":
+        statusCode = 404;
+        errorMessage = "A related record could not be found.";
+        break;
+      case "P2016":
+        statusCode = 400;
+        errorMessage = "Query interpretation error.";
+        break;
+      case "P2017":
+        statusCode = 400;
+        errorMessage = "The records for relation are not connected.";
+        break;
+      case "P2018":
+        statusCode = 404;
+        errorMessage = "The required connected records were not found.";
+        break;
+      case "P2019":
+        statusCode = 400;
+        errorMessage = "Input error.";
+        break;
+      case "P2020":
+        statusCode = 400;
+        errorMessage = "Value out of range for the type.";
+        break;
+      case "P2021":
+        statusCode = 500;
+        errorMessage = "The table does not exist in the current database.";
+        break;
+      case "P2022":
+        statusCode = 500;
+        errorMessage = "The column does not exist in the current database.";
+        break;
+      case "P2023":
+        statusCode = 500;
+        errorMessage = "Inconsistent column data.";
+        break;
+      case "P2024":
+        statusCode = 408;
+        errorMessage = "Connection pool timeout.";
+        break;
+      case "P2026":
+        statusCode = 400;
+        errorMessage = "Current database provider doesn't support this feature.";
+        break;
+      case "P2027":
+        statusCode = 500;
+        errorMessage = "Multiple errors occurred during query execution.";
+        break;
+      case "P2030":
+        statusCode = 400;
+        errorMessage = "Cannot find a fulltext index to use for the search.";
+        break;
+      case "P2033":
+        statusCode = 400;
+        errorMessage = "A number used in the query does not fit into a 64-bit signed integer.";
+        break;
+      case "P2034":
+        statusCode = 409;
+        errorMessage = "Transaction failed due to a write conflict or deadlock.";
+        break;
+      case "P2035":
+        statusCode = 500;
+        errorMessage = "Assertion violation.";
+        break;
+      case "P2037":
+        statusCode = 503;
+        errorMessage = "Too many database connections opened.";
+        break;
+      default:
+        statusCode = 400;
+        errorMessage = `Database error: ${err.code}`;
+    }
+    errorDetails = {
+      ...errorDetails,
+      code: err.code,
+      meta: err.meta
+    };
+  } else if (err instanceof prismaNamespace_exports.PrismaClientUnknownRequestError) {
+    statusCode = 400;
+    errorMessage = "Database error: Invalid query or operation.";
+    errorDetails = { message: err.message };
+  } else if (err instanceof prismaNamespace_exports.PrismaClientRustPanicError) {
+    statusCode = 500;
+    errorMessage = "Database engine crashed. Please try again later.";
+    errorDetails = { message: err.message };
+  } else if (err instanceof prismaNamespace_exports.PrismaClientInitializationError) {
+    statusCode = 500;
+    errorMessage = "Failed to initialize database connection.";
+    errorDetails = {
+      errorCode: err.errorCode,
+      message: err.message
+    };
+  } else if (err instanceof prismaNamespace_exports.PrismaClientValidationError) {
+    statusCode = 400;
+    errorMessage = "Validation error in database query.";
+    errorDetails = { message: err.message };
+  } else if (err instanceof SyntaxError) {
+    statusCode = 400;
+    errorMessage = "Invalid JSON syntax in request.";
+  } else if (err instanceof TypeError) {
+    statusCode = 400;
+    errorMessage = "Type error occurred.";
+  } else if (err.name === "ValidationError") {
+    statusCode = 400;
+    errorMessage = err.message;
+  } else if (err.name === "UnauthorizedError") {
+    statusCode = 401;
+    errorMessage = "Unauthorized access.";
+  } else if (err.name === "ForbiddenError") {
+    statusCode = 403;
+    errorMessage = "Access forbidden.";
+  } else if (err.name === "NotFoundError") {
+    statusCode = 404;
+    errorMessage = "Resource not found.";
+  } else if (err.name === "ConflictError") {
+    statusCode = 409;
+    errorMessage = "Resource conflict occurred.";
+  }
+  console.error("DEBUG ERR:", err);
+  res.status(statusCode);
+  res.json({
+    success: false,
+    message: errorMessage,
+    error: errorDetails instanceof Error ? {
+      name: errorDetails.name,
+      message: errorDetails.message,
+      stack: errorDetails.stack
+    } : errorDetails
+  });
+}
+var globalErrorHandler_default = errorHandler;
+
+// src/middleware/notFound.ts
+function notFound(req, res) {
+  res.status(404).json({
+    message: "Route not found!",
+    path: req.originalUrl,
+    date: Date()
+  });
+}
+
 // src/app.ts
-var app = express11();
-app.use(express11.json());
+var app = express12();
+app.use("/api/v1/payments/webhook", express12.raw({ type: "application/json" }));
 var allowedOrigins = [
   process.env.APP_URL || "http://localhost:3000",
+  "http://localhost:4000",
   process.env.PROD_APP_URL
   // Production frontend URL
 ].filter(Boolean);
@@ -2489,20 +2959,24 @@ app.use(
     exposedHeaders: ["Set-Cookie"]
   })
 );
-app.all("/api/auth/*splat", toNodeHandler(auth));
-app.use("/api/tutors", tutorRouter);
-app.use("/api/categories", categoryRouter);
-app.use("/api/availability", availabilityRouter);
-app.use("/api/bookings", bookingRouter);
-app.use("/api/reviews", reviewRouter);
-app.use("/api/tutor-categories", tutorCategoryRouter);
-app.use("/api/admin", adminRouter);
-app.use("/api/adminAnalytic", adminAnalyticsRouter);
-app.use("/api/users", usersRouter);
-app.use("/api/me", authRouter);
-app.get("", (req, res) => {
+app.use(express12.json());
+app.all("/api/auth/*path", toNodeHandler(auth));
+app.use("/api/v1/tutors", tutorRouter);
+app.use("/api/v1/categories", categoryRouter);
+app.use("/api/v1/availability", availabilityRouter);
+app.use("/api/v1/bookings", bookingRouter);
+app.use("/api/v1/reviews", reviewRouter);
+app.use("/api/v1/tutor-categories", tutorCategoryRouter);
+app.use("/api/v1/admin", adminRouter);
+app.use("/api/v1/adminAnalytic", adminAnalyticsRouter);
+app.use("/api/v1/users", usersRouter);
+app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/payments", paymentRouter);
+app.get("/", (req, res) => {
   res.send("Hello world!");
 });
+app.use(globalErrorHandler_default);
+app.use(notFound);
 var app_default = app;
 
 // src/index.ts

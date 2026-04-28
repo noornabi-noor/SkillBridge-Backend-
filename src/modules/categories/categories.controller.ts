@@ -1,9 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import { categoryServices } from "./categories.services";
+import { createCategorySchema, updateCategorySchema } from "./categories.validation";
 
 const createCategories = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await categoryServices.createCategories(req.body);
+    const data = createCategorySchema.parse(req.body);
+    const result = await categoryServices.createCategories(data);
     return res.status(201).json({
       success: true,
       data: result,
@@ -41,9 +43,8 @@ const getSingleCategory = async (req: Request, res: Response, next: NextFunction
 const updateCategory = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const { name, tutorIds } = req.body;
-
-    const result = await categoryServices.updateCategory(id as string, { name, tutorIds });
+    const data = updateCategorySchema.parse(req.body);
+    const result = await categoryServices.updateCategory(id as string, data);
     res.status(200).json({
       success: true,
       data: result,

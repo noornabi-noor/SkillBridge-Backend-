@@ -1,9 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import { reviewServices } from "./review.services";
+import { createReviewSchema, updateReviewSchema } from "./review.validation";
 
 const createReview = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await reviewServices.createReview(req.body);
+    const data = createReviewSchema.parse(req.body);
+    const result = await reviewServices.createReview(data);
     res.status(201).json({
       success: true,
       data: result,
@@ -33,8 +35,8 @@ const getReviews = async (req: Request, res: Response, next: NextFunction) => {
 const updateReview = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const updatedReview = await reviewServices.updateReview(id as string, req.body);
-
+    const data = updateReviewSchema.parse(req.body);
+    const updatedReview = await reviewServices.updateReview(id as string, data as any);
     res.status(200).json({
       success: true,
       data: updatedReview,

@@ -5,7 +5,11 @@ const createAvailability = async (
   data: Omit<
     Availability,
     "id" | "createdAt" | "updatedAt" | "isBooked" | "tutor" | "tutorId"
-  >,
+  > & {
+    dayOfWeek?: number | undefined;
+    startTime?: string | undefined;
+    endTime?: string | undefined;
+  },
   tutorId: string,
 ) => {
   return await prisma.availability.create({
@@ -95,7 +99,12 @@ const updateAvailability = async (
   availabilityId: string,
   data: Partial<
     Pick<Availability, "dayOfWeek" | "startTime" | "endTime" | "isBooked">
-  >,
+  > & {
+    dayOfWeek?: number | undefined;
+    startTime?: string | undefined;
+    endTime?: string | undefined;
+    isBooked?: boolean | undefined;
+  },
 ) => {
   const availabilityData = await prisma.availability.findUnique({
     where: { id: availabilityId },

@@ -2,7 +2,13 @@ import { Review } from "../../../generated/prisma/client";
 import { prisma } from "../../lib/prisma";
 
 const createReview = async (
-  data: Omit<Review, "id" | "createdAt" | "updatedAt" | "student" | "tutor" | "booking">
+  data: Omit<Review, "id" | "createdAt" | "updatedAt" | "student" | "tutor" | "booking"> & {
+    rating?: number | undefined;
+    comment?: string | undefined;
+    tutorId?: string | undefined;
+    studentId?: string | undefined;
+    bookingId?: string | undefined;
+  }
 ) => {
   
   const review = await prisma.review.create({
@@ -46,7 +52,10 @@ const getReviews = async (tutorId?: string, studentId?: string) => {
 
 const updateReview = async (
   reviewId: string,
-  data: Partial<Pick<Review, "rating" | "comment">>
+  data: Partial<Pick<Review, "rating" | "comment">> & {
+    rating?: number | undefined;
+    comment?: string | undefined;
+  }
 ) => {
   const review = await prisma.review.findUnique({ where: { id: reviewId } });
   if (!review) throw new Error("Review not found");

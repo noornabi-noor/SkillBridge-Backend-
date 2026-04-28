@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { usersServices } from "./user.services";
+import { updateUserStatusSchema, updateUserProfileSchema } from "./user.validation";
 
 const getAllUsers = async (_req: Request, res: Response, next: NextFunction) => {
   try {
@@ -39,8 +40,8 @@ const getCurrentUser = async (req: Request, res: Response, next: NextFunction) =
 const updateUserStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
-    const updatedUser = await usersServices.updateUserStatus(id as string, status);
+    const data = updateUserStatusSchema.parse(req.body);
+    const updatedUser = await usersServices.updateUserStatus(id as string, data.status);
     res.status(200).json({ success: true, data: updatedUser });
   } catch (error) {
     next(error);
@@ -50,15 +51,8 @@ const updateUserStatus = async (req: Request, res: Response, next: NextFunction)
 const updateUserProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const { name, email, image, phone } = req.body;
-
-    const updatedUser = await usersServices.updateUserProfile(id as string, {
-      name,
-      email,
-      image,
-      phone,
-    });
-
+    const data = updateUserProfileSchema.parse(req.body);
+    const updatedUser = await usersServices.updateUserProfile(id as string, data as any);
     res.status(200).json({ success: true, data: updatedUser });
   } catch (error) {
     next(error);

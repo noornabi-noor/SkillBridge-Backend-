@@ -10,17 +10,23 @@ type TutorProfileInput = Omit<
   | "user"
   | "bookings"
   | "reviews"
+  | "rating"
+  | "userId"
+  | "totalReviews"
 > & {
   categories?: string[];
 };
 
 const createTutorProfile = async (data: TutorProfileInput, userId: string) => {
+  const experienceValue = typeof data.experience === 'string' ? Number(data.experience) : data.experience;
+  const pricePerHourValue = typeof data.pricePerHour === 'string' ? Number(data.pricePerHour) : data.pricePerHour;
+
   return prisma.tutorProfile.upsert({
     where: { userId },
     update: {
-      bio: data.bio,
-      experience: data.experience,
-      pricePerHour: data.pricePerHour,
+      ...(data.bio && { bio: data.bio }),
+      ...(experienceValue !== undefined && { experience: experienceValue }),
+      ...(pricePerHourValue !== undefined && { pricePerHour: pricePerHourValue }),
       categories: {
         deleteMany: {},
         create:
@@ -36,9 +42,9 @@ const createTutorProfile = async (data: TutorProfileInput, userId: string) => {
     },
     create: {
       userId,
-      bio: data.bio,
-      experience: data.experience,
-      pricePerHour: data.pricePerHour,
+      bio: data.bio || null,
+      experience: experienceValue || 0,
+      pricePerHour: pricePerHourValue || 0,
       categories: {
         create:
           data.categories?.map((name) => ({
@@ -123,12 +129,15 @@ const getSingleTutor = async (id: string) => {
 };
 
 const updateTutorProfile = async (userId: string, data: TutorProfileInput) => {
+  const experienceValue = typeof data.experience === 'string' ? Number(data.experience) : data.experience;
+  const pricePerHourValue = typeof data.pricePerHour === 'string' ? Number(data.pricePerHour) : data.pricePerHour;
+
   return prisma.tutorProfile.upsert({
     where: { userId },
     update: {
-      bio: data.bio,
-      experience: data.experience,
-      pricePerHour: data.pricePerHour,
+      ...(data.bio && { bio: data.bio }),
+      ...(experienceValue !== undefined && { experience: experienceValue }),
+      ...(pricePerHourValue !== undefined && { pricePerHour: pricePerHourValue }),
       categories: {
         deleteMany: {},
         create:
@@ -144,9 +153,9 @@ const updateTutorProfile = async (userId: string, data: TutorProfileInput) => {
     },
     create: {
       userId,
-      bio: data.bio,
-      experience: data.experience,
-      pricePerHour: data.pricePerHour,
+      bio: data.bio || null,
+      experience: experienceValue || 0,
+      pricePerHour: pricePerHourValue || 0,
       categories: {
         create:
           data.categories?.map((name: string) => ({

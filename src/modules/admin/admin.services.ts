@@ -17,7 +17,10 @@ const updateUser = async (
 ) => {
   return prisma.user.update({
     where: { id: userId },
-    data,
+    data: {
+      ...(data.role && { role: data.role }),
+      ...(data.isBlocked !== undefined && { isBlocked: data.isBlocked }),
+    },
   });
 };
 
@@ -79,7 +82,9 @@ const updateCategory = async (
 ) => {
   return prisma.category.update({
     where: { id: categoryId },
-    data,
+    data: {
+      ...(data.name && { name: data.name }),
+    },
   });
 };
 
